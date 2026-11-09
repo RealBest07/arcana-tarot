@@ -1,0 +1,14 @@
+# original full-size art (190 MB) — the site only needs the optimised files in cards/ and assets/
+cardpng/
+img/
+*.png
+!assets/*.png
+
+# old prototypes and local tool settings
+v1/
+v2/
+.claude/
+
+Thumbs.db
+desktop.ini
+.DS_Store
