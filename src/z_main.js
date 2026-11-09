@@ -581,7 +581,7 @@ function previewSpread(){
     const off=(k-(n-1)/2),x=D.x+off*cw*(n>3?.34:.62),i=c.idx;
     S.previews.push(gsap.timeline())
     S.previews[S.previews.length-1]
-      .to(c.el,{x,y:D.y-cw*.18,z:i*TH+60+k*2,rotation:off*(n>3?5:9),rotationX:-12,duration:.6,ease:EO,delay:k*.03,overwrite:'auto'})
+      .to(c.el,{x,y:D.y-cw*.18,z:i*TH+40+k*9,rotation:off*(n>3?5:9),rotationX:-12,duration:.6,ease:EO,delay:k*.03,overwrite:'auto'})
       .to(c.el,{...stackPose(i,D),duration:.7,ease:EIO},'+=.55');
   });
 }
