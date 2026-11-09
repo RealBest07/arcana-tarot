@@ -1489,6 +1489,7 @@ function computeLayout(){
   // screen offset maps to world y / cos30.
   const sp=document.getElementById('setup'),pH=sp?sp.offsetHeight:380,y0=56+8,y1=H-pH-14-44,deckH=ch*.87+22;
   L.deckSetup={x:0,y:((y0+y1)/2-H/2)/.866,sc:clamp((y1-y0-8)/deckH,.5,1)};L.hintTop=y1-2;
+  L.deckRoom=Math.max(0,((y1-y0)-deckH*L.deckSetup.sc)/2);          // free screen space above the deck
   L.deckShuffle={x:0,y:-H*.03};
   L.Hf=row?ch+80:Math.min(H*.42,420);L.step=clamp(cw*.36,24,40);
   return L;
@@ -1871,11 +1872,20 @@ function previewSpread(){
   // drawn from the deck: the cards first rise off the top of the pile, then fan out; on the way back they
   // fold into a neat pile right above the deck and settle down onto it, so the motion always reads as one deck
   const topZ=(S.deck.length-1)*TH*(D.sc||1);
+  // 1 card: lifted clear above the deck (as far as the free space allows) · 3 cards: side by side with gaps ·
+  // 10 cards: an overlapping fan
+  // lifts never go past the free space above the deck (minus a margin), so cards stay clear of the header
+  const sc=D.sc||1,cwS=cw*sc,chS=cwS*12/7,room=Math.max(0,S.L.deckRoom-18)/.866,
+    lift1=Math.min(chS*.6,room),lift3=Math.min(chS*.22,room),gap3=Math.min(cwS*1.14,(S.L.W-24)/3/.95),
+    narrow=S.L.W<600,step10=Math.min(cw*.34,(S.L.W-36-cwS*1.4)/9/.95);   // the 10-card fan fits the screen width
   top.forEach((c,k)=>{
-    const off=(k-(n-1)/2),x=D.x+off*cw*(n>3?.34:.62),i=c.idx,pile={x:D.x,y:D.y-cw*.06,z:topZ+10+k*1.5,rotation:0,rotationX:0,rotationY:0};
+    const off=(k-(n-1)/2),i=c.idx,pile={x:D.x,y:D.y-cw*.06,z:topZ+10+k*1.5,rotation:0,rotationX:0,rotationY:0};
+    const fan=n===1?{x:D.x,y:D.y-lift1,z:topZ+20,rotation:-3,rotationX:-14}
+      :n<=3?{x:D.x+off*gap3,y:D.y-lift3+Math.abs(off)*chS*.04,z:topZ+20+k*12,rotation:off*4,rotationX:-12}
+      :{x:D.x+off*step10,y:D.y-Math.min(cw*.18,room)+(narrow?off*off*cwS*.035:0),z:topZ+12+k*(narrow?9:16),rotation:off*(narrow?3:5),rotationX:narrow?-6:-12};
     S.previews.push(gsap.timeline({delay:k*.035})
       .to(c.el,{...pile,duration:.22,ease:'power2.out',overwrite:'auto'})
-      .to(c.el,{x,y:D.y-cw*.18,z:topZ+12+k*16,rotation:off*(n>3?5:9),rotationX:-12,duration:.55,ease:'power3.out'})
+      .to(c.el,{...fan,duration:.55,ease:'power3.out'})
       .to(c.el,{...pile,duration:.45,ease:'power2.inOut'},'+=.55')
       .to(c.el,{...stackPose(i,D),duration:.3,ease:'power2.in'}));
   });
