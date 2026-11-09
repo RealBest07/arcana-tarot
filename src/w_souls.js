@@ -55,9 +55,9 @@ function crackSVG(){
   const paths=[];
   const branch=(x,y,a,len,depth)=>{
     let d=`M${x.toFixed(1)},${y.toFixed(1)}`;
-    for(let s=0;s<len;s++){a+=(r()-.5)*.9;x+=Math.cos(a)*14;y+=Math.sin(a)*14;d+=`L${x.toFixed(1)},${y.toFixed(1)}`;
+    for(let s=0;s<len;s++){a+=(r()-.5)*.9;x=Math.min(276,Math.max(4,x+Math.cos(a)*14));y=Math.min(476,Math.max(4,y+Math.sin(a)*14));d+=`L${x.toFixed(1)},${y.toFixed(1)}`;
       if(depth<2&&r()<.18)branch(x,y,a+(r()<.5?-1:1)*(.6+r()*.6),Math.floor(len*.5),depth+1)}
-    paths.push(`<path d="${d}" pathLength="1" style="stroke-width:${(2.2-depth*.6).toFixed(1)}"/>`);
+    const sw=2.2-depth*.6;paths.push(`<path class="cg" d="${d}" pathLength="1" style="stroke-width:${(sw*3.2).toFixed(1)}"/><path d="${d}" pathLength="1" style="stroke-width:${sw.toFixed(1)}"/>`);
   };
   const starts=[[r()*280,0,Math.PI/2],[0,140+r()*200,0],[280,140+r()*200,Math.PI],[r()*280,480,-Math.PI/2]];
   starts.sort(()=>r()-.5).slice(0,3).forEach(([x,y,a])=>branch(x,y,a+(r()-.5)*.6,9+Math.floor(r()*8),0));
