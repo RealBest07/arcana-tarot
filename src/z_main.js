@@ -193,12 +193,17 @@ function computeLayout(){
   const L={W,H,wide,row,cw,ch,hdr:56,corner:.4};
   L.px=Math.round(clamp(Math.min(H*.36,W*.42),cw,300));        // layout width of card art (largest size a card is shown at)
   L.dockW=Math.min(400,W*.36);L.dockH=Math.min(H*(S.spreadKey==='celtic'?.34:.4),340);
-  L.deckSetup={x:0,y:-H*.15};L.deckShuffle={x:0,y:-H*.03};
+  // setup deck: centred in the space between the header and the deck hint above the setup panel,
+  // shrunk when that space is short (phones with browser bars). The camera is tilted 30° here, so a
+  // screen offset maps to world y / cos30.
+  const sp=document.getElementById('setup'),pH=sp?sp.offsetHeight:380,y0=56+8,y1=H-pH-14-44,deckH=ch*.87+22;
+  L.deckSetup={x:0,y:((y0+y1)/2-H/2)/.866,sc:clamp((y1-y0-8)/deckH,.5,1)};L.hintTop=y1-2;
+  L.deckShuffle={x:0,y:-H*.03};
   L.Hf=row?ch+80:Math.min(H*.42,420);L.step=clamp(cw*.36,24,40);
   return L;
 }
 const TH=.45;                                                   // deck thickness per card (px of z)
-const stackPose=(i,b,sc=1)=>pose({x:b.x,y:b.y,z:i*TH*sc,scale:sc});
+const stackPose=(i,b,sc=b.sc||1)=>pose({x:b.x,y:b.y,z:i*TH*sc,scale:sc});
 function cornerPose(k){
   const L=S.L,sc=L.corner,ext=!L.wide?(S.dock==='open'?L.dockH:S.dock==='peek'?44:0):0;
   return pose({x:-L.W/2+16+L.cw*sc/2,y:L.H/2-ext-16-L.ch*sc/2,z:k*.3,scale:sc});
@@ -334,7 +339,7 @@ const ROOTSTYLE=document.documentElement.style;
 function placeUI(){
   const L=S.L;
   gsap.set(['#setup','#prompt','#hintPos','#shufUI','#galBar','#deckHint'],{xPercent:-50});
-  gsap.set('#deckHint',{top:L.H/2+L.deckSetup.y+L.ch*.5+20});
+  gsap.set('#deckHint',{top:L.hintTop});
   const inf=$('#info');inf.className='glass '+(L.wide?'wide':'narrow');inf.style.setProperty('--infoW',INFO_W()+'px');inf.style.setProperty('--infoH',INFO_H()+'px');
   gsap.set('#shufUI',{top:L.H/2+L.deckShuffle.y+L.ch*.62+38});
   gsap.set('#hintPos',{y:revealBox().y1+(L.wide?6:10)});
@@ -865,5 +870,7 @@ function init(){
   $('#dockToggle').onclick=()=>{if(S.busy||S.dock==='hidden')return;go(async()=>{await tlDone(dockTo(S.dock==='open'?'peek':'open'))})};
   addEventListener('resize',()=>onResize(false));
   prepareBacks();S.intro=playIntro();
+  // web fonts change the setup panel's height once loaded; re-measure so the deck and its hint sit above it
+  if(document.fonts&&document.fonts.ready)document.fonts.ready.then(()=>{if(S.state!=='intro')onResize(false);else{S.L=computeLayout();placeUI()}});
 }
 init();
