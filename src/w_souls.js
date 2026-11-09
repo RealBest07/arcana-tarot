@@ -170,7 +170,55 @@ Sound.boom=function(){
   const _chime=Sound.chime;Sound.chime=function(){_chime.call(this);this.bell()};
 }
 
-document.head.insertAdjacentHTML('beforeend','<style>#shufUI p,#prompt p,#prompt small{text-shadow:0 0 6px #050507,0 0 14px #050507,0 0 26px #050507}</style>');
+document.head.insertAdjacentHTML('beforeend',`<style>#shufUI p,#prompt p,#prompt small{text-shadow:0 0 6px #050507,0 0 14px #050507,0 0 26px #050507}
+#swipeHint{position:fixed;left:50%;translate:-50% 0;z-index:6;pointer-events:none;text-align:center;opacity:0;visibility:hidden}
+#swipeHint svg{width:200px;height:36px;display:block;margin:0 auto;overflow:visible}
+#swipeHint .sh{fill:none;stroke:#e0b45c;stroke-width:3.2;stroke-linecap:round;stroke-linejoin:round;filter:drop-shadow(0 0 6px rgba(255,170,70,.75))}
+#swipeHint .sd{fill:#fff1c8;filter:drop-shadow(0 0 6px #ffb050)}
+#swipeHint span{display:inline-block;margin-top:2px;font-size:13px;color:var(--gold2);text-shadow:0 0 6px #050507,0 0 14px #050507;white-space:nowrap}
+#swipeHint b{font-weight:400}
+.fanEdge{position:fixed;z-index:6;pointer-events:none;font-family:'Cinzel',serif;font-size:44px;line-height:1;color:var(--gold2);translate:0 -50%;
+  text-shadow:0 0 12px rgba(255,160,70,.85),0 0 2px #000;opacity:0;visibility:hidden}
+.fanEdge.l{left:4px;animation:edgeL 1.3s ease-in-out infinite}.fanEdge.r{right:4px;animation:edgeR 1.3s ease-in-out infinite}
+@keyframes edgeL{50%{transform:translateX(-5px)}}@keyframes edgeR{50%{transform:translateX(5px)}}
+</style>`);
+
+/* ---- phones: swipe guide over the card row + edge chevrons while more cards lie off-screen ---- */
+(function swipeGuide(){
+  const st=$('#stage');
+  st.insertAdjacentHTML('beforeend',`<div id="swipeHint" aria-hidden="true">
+      <svg viewBox="0 0 220 40"><path class="sh" d="M28,20 H192"/><path class="sh" d="M40,9 L26,20 L40,31 M180,9 L194,20 L180,31"/><circle class="sd" cx="110" cy="20" r="4"/></svg>
+      <span><b>✋</b> ปัดซ้าย–ขวา เพื่อเลื่อนดูไพ่</span></div>
+    <div class="fanEdge l" aria-hidden="true">‹</div><div class="fanEdge r" aria-hidden="true">›</div>`);
+  const hint=$('#swipeHint'),dot=hint.querySelector('.sd'),eL=st.querySelector('.fanEdge.l'),eR=st.querySelector('.fanEdge.r');
+  let loop=null,shown=false,panned=false;
+  const fanTop=()=>S.L.H-S.L.Hf+50;
+  function show(){
+    if(!S.L.row||panned||shown)return;shown=true;
+    gsap.set(hint,{top:fanTop()-54});
+    gsap.fromTo(hint,{autoAlpha:0,y:10},{autoAlpha:1,y:0,duration:RM()?.01:.6,ease:EO});
+    if(!RM())loop=gsap.timeline({repeat:-1,repeatDelay:.3})
+      .fromTo(dot,{attr:{cx:110}},{attr:{cx:182},duration:.7,ease:'power2.inOut'})
+      .to(dot,{attr:{cx:38},duration:1.2,ease:'power2.inOut'})
+      .to(dot,{attr:{cx:110},duration:.7,ease:'power2.inOut'})
+      .to(hint.querySelector('svg'),{x:-10,duration:.9,ease:'sine.inOut',yoyo:true,repeat:1},0);
+  }
+  function hide(){if(!shown)return;shown=false;loop&&loop.kill();loop=null;gsap.to(hint,{autoAlpha:0,y:-6,duration:.35,ease:EI})}
+  // edge chevrons follow the pan position
+  gsap.ticker.add(()=>{
+    const on=S.state==='pick'&&S.L&&S.L.row&&!S.busy;
+    let l=0,r=0;if(on){const m=maxPan(S.fan.length);if(m>4){l=S.pan>-m+6?1:0;r=S.pan<m-6?1:0}}
+    if(eL._v!==l){eL._v=l;gsap.to(eL,{autoAlpha:l*.9,duration:.3})}
+    if(eR._v!==r){eR._v=r;gsap.to(eR,{autoAlpha:r*.9,duration:.3})}
+    if(on&&(l||r)){const t=fanTop()+S.L.ch*.42;if(eL._t!==t){eL._t=t;gsap.set([eL,eR],{top:t})}}
+  });
+  document.addEventListener('pointermove',()=>{if(shown&&S.dragging){panned=true;hide()}},{passive:true});
+  const _deal=dealFan,_toReveal=toReveal,_new=newReading,_pick=pickCard;
+  pickCard=async function(){hide();return _pick.apply(this,arguments)};
+  dealFan=async function(){const r=await _deal.apply(this,arguments);show();return r};
+  toReveal=async function(){hide();return _toReveal.apply(this,arguments)};
+  newReading=async function(){hide();return _new.apply(this,arguments)};
+})();
 
 /* ---- game-menu feel: a soft tick when the pointer moves onto a button ---- */
 document.addEventListener('pointerover',e=>{

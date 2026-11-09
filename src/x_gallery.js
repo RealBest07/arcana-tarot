@@ -54,7 +54,8 @@ function overDeck(x,y){const r=S.deck[77]&&S.deck[77].el.getBoundingClientRect()
     d.top.forEach((c,k)=>{const f=1-k*.15;gsap.set(c.el,{x:D.x+dx*f,y:D.y+dy*f*1.15,z:c.idx*TH+18+(6-k)*4,rotation:dx*.07*f,rotationX:0,rotationY:0})});
     if(Math.hypot(dx,dy)>90){d=null;document.body.style.cursor='';go(toGallery)}
   });
-  document.addEventListener('pointerup',e=>{if(!d)return;const mv=Math.hypot(e.clientX-d.x,e.clientY-d.y);snap();if(mv<8)go(toGallery)});
+  // a tap opens the gallery straight away (no snap-back tween, which would fight the gallery layout)
+  document.addEventListener('pointerup',e=>{if(!d)return;const mv=Math.hypot(e.clientX-d.x,e.clientY-d.y);if(mv<8){d=null;document.body.style.cursor='';go(toGallery)}else snap()});
   document.addEventListener('pointercancel',()=>{if(d)snap()});
 })();
 
@@ -63,7 +64,8 @@ async function toGallery(){
   killPreview();S.prevCards=[];S.gpan=0;setState('gallery');S.L=computeLayout();S.G=galleryLayout();placeUI();
   document.body.style.cursor='';
   const tl=gsap.timeline(),rm=RM(),G=S.G,order=S.deck.slice().sort((a,b)=>a.ord-b.ord);
-  S.deck.forEach(c=>{renderCardFace(c);c.el.classList.remove('top');c.el.classList.add('gal');gsap.set(c.revEl,{rotation:0});gsap.set(c.hov,{clearProps:'all'})});
+  // stop any snap-back / preview tween first so it can't pull cards back to the deck afterwards
+  S.deck.forEach(c=>{gsap.killTweensOf(c.el);renderCardFace(c);c.el.classList.remove('top');c.el.classList.add('gal');gsap.set(c.revEl,{rotation:0});gsap.set(c.hov,{clearProps:'all'})});
   tl.add(pOut('#setup',{y:260,d:1}),0).add(pOut('#deckHint',{y:30}),0).add(camTo('gallery',1.6),0);
   if(!rm)tl.to(STAR,{boost:.6,duration:.5,ease:EO},.2).to(STAR,{boost:0,duration:1.6,ease:EI},.7);
   Sound.whoosh();buzz(15);
