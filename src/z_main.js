@@ -577,12 +577,16 @@ function previewSpread(){
   S.prevCards.filter(c=>!top.includes(c)).forEach(c=>gsap.to(c.el,{...stackPose(c.idx,D),duration:RM()?.01:.5,ease:EIO,overwrite:'auto'}));
   S.prevCards=top;
   if(RM()){top.forEach(c=>gsap.set(c.el,stackPose(c.idx,D)));return}
+  // drawn from the deck: the cards first rise off the top of the pile, then fan out; on the way back they
+  // fold into a neat pile right above the deck and settle down onto it, so the motion always reads as one deck
+  const topZ=(S.deck.length-1)*TH*(D.sc||1);
   top.forEach((c,k)=>{
-    const off=(k-(n-1)/2),x=D.x+off*cw*(n>3?.34:.62),i=c.idx;
-    S.previews.push(gsap.timeline())
-    S.previews[S.previews.length-1]
-      .to(c.el,{x,y:D.y-cw*.18,z:i*TH+40+k*16,rotation:off*(n>3?5:9),rotationX:-12,duration:.6,ease:EO,delay:k*.03,overwrite:'auto'})
-      .to(c.el,{...stackPose(i,D),duration:.7,ease:EIO},'+=.55');
+    const off=(k-(n-1)/2),x=D.x+off*cw*(n>3?.34:.62),i=c.idx,pile={x:D.x,y:D.y-cw*.06,z:topZ+10+k*1.5,rotation:0,rotationX:0,rotationY:0};
+    S.previews.push(gsap.timeline({delay:k*.035})
+      .to(c.el,{...pile,duration:.22,ease:'power2.out',overwrite:'auto'})
+      .to(c.el,{x,y:D.y-cw*.18,z:topZ+12+k*16,rotation:off*(n>3?5:9),rotationX:-12,duration:.55,ease:'power3.out'})
+      .to(c.el,{...pile,duration:.45,ease:'power2.inOut'},'+=.55')
+      .to(c.el,{...stackPose(i,D),duration:.3,ease:'power2.in'}));
   });
 }
 function chooseSpread(key){
