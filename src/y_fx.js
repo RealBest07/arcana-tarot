@@ -111,7 +111,7 @@ Sound.curse=function(){
   o.connect(f).connect(g).connect(Sound.out(c));o.start(t);o.stop(t+.9);
 };
 
-/* ---- holo foil: rainbow sheen + glitter follow the pointer (or device tilt); hovered card tilts in 3D ---- */
+/* ---- holo foil: sheen + glitter follow the pointer (or device tilt); the hovered card grows slightly ---- */
 function holoAt(px,py,tilt){
   const list=S.state==='gallery'?(S.zoom?[S.zoom]:[]):S.picked;
   for(const c of list){
@@ -119,10 +119,11 @@ function holoAt(px,py,tilt){
     const r=c.el.getBoundingClientRect(),u=(px-r.left)/r.width,v=(py-r.top)/r.height;
     c.el.style.setProperty('--hx',(clamp(.5-u,-1.5,1.5)*30).toFixed(1)+'%');
     c.el.style.setProperty('--hy',(clamp(.5-v,-1.5,1.5)*22).toFixed(1)+'%');
-    if(!c.qx){c.qx=gsap.quickTo(c.hov,'rotationY',{duration:.6,ease:EO});c.qy=gsap.quickTo(c.hov,'rotationX',{duration:.6,ease:EO})}
+    // no 3D tilt here: rotating a card on the 3D table made Chrome draw parts of its face (the dark name banner)
+    // at the wrong place. The hovered card just grows a little and its sheen follows the pointer.
     const inside=tilt&&!RM()&&u>=0&&u<=1&&v>=0&&v<=1;
-    if(inside){c.qx((u-.5)*20);c.qy((.5-v)*16);c.tilted=true;c.el.classList.add('hot')}
-    else if(c.tilted){c.qx(0);c.qy(0);c.tilted=false;c.el.classList.remove('hot')}
+    if(inside&&!c.tilted){c.tilted=true;c.el.classList.add('hot');gsap.to(c.hov,{scale:1.035,rotationX:0,rotationY:0,duration:.35,ease:EO,overwrite:'auto'})}
+    else if(!inside&&c.tilted){c.tilted=false;c.el.classList.remove('hot');gsap.to(c.hov,{scale:1,rotationX:0,rotationY:0,duration:.35,ease:EO,overwrite:'auto'})}
   }
 }
 document.addEventListener('pointermove',e=>{if(S.state==='reveal'||S.state==='reading'||S.state==='gallery')holoAt(e.clientX,e.clientY,e.pointerType==='mouse')},{passive:true});
