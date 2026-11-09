@@ -1878,11 +1878,14 @@ function previewSpread(){
   const sc=D.sc||1,cwS=cw*sc,chS=cwS*12/7,room=Math.max(0,S.L.deckRoom-18)/.866,
     lift1=Math.min(chS*.6,room),lift3=Math.min(chS*.22,room),gap3=Math.min(cwS*1.14,(S.L.W-24)/3/.95),
     narrow=S.L.W<600,step10=Math.min(cw*.34,(S.L.W-36-cwS*1.4)/9/.95);   // the 10-card fan fits the screen width
+  // a card tilted by rotationX dips its lower edge by (half height)·sin(tilt); lift it at least that much above the
+  // deck top, or the edge sinks into the pile
+  const clear=rx=>chS*.5*Math.sin(Math.abs(rx)*D2R)+10,rx10=narrow?-6:-12;
   top.forEach((c,k)=>{
     const off=(k-(n-1)/2),i=c.idx,pile={x:D.x,y:D.y-cw*.06,z:topZ+10+k*1.5,rotation:0,rotationX:0,rotationY:0};
-    const fan=n===1?{x:D.x,y:D.y-lift1,z:topZ+20,rotation:-3,rotationX:-14}
-      :n<=3?{x:D.x+off*gap3,y:D.y-lift3+Math.abs(off)*chS*.04,z:topZ+20+k*12,rotation:off*4,rotationX:-12}
-      :{x:D.x+off*step10,y:D.y-Math.min(cw*.18,room)+(narrow?off*off*cwS*.035:0),z:topZ+12+k*(narrow?9:16),rotation:off*(narrow?3:5),rotationX:narrow?-6:-12};
+    const fan=n===1?{x:D.x,y:D.y-lift1,z:topZ+clear(14),rotation:-3,rotationX:-14}
+      :n<=3?{x:D.x+off*gap3,y:D.y-lift3+Math.abs(off)*chS*.04,z:topZ+clear(12)+k*12,rotation:off*4,rotationX:-12}
+      :{x:D.x+off*step10,y:D.y-Math.min(cw*.18,room)+(narrow?off*off*cwS*.035:0),z:topZ+clear(rx10)+k*(narrow?9:16),rotation:off*(narrow?3:5),rotationX:rx10};
     S.previews.push(gsap.timeline({delay:k*.035})
       .to(c.el,{...pile,duration:.22,ease:'power2.out',overwrite:'auto'})
       .to(c.el,{...fan,duration:.55,ease:'power3.out'})
