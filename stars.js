@@ -276,6 +276,49 @@ for(let i=0;i<1300;i++){
 }
 const MILKY=[];for(let i=0;i<520;i++){const p=gal2eq(rnd()*TAU,gauss()*6*D2R);MILKY.push({...p,w:.6+rnd()*.8})}
 
+/* zodiac figures (painted line art, assets/zodiac/*.webp): centre (RA h, Dec °) and height on the sky (°),
+   in the order of SIGNS, so the sun's sign index is the figure's index. Each is drawn upright to celestial north. */
+const ZOD=[['aries',2.6,20,22,'Ari'],['taurus',4.7,19,34,'Tau'],['gemini',7.1,23,28,'Gem'],['cancer',8.6,20,22,''],['leo',10.6,16,34,'Leo'],['virgo',13.2,-3,40,'Vir'],
+  ['libra',15.1,-15,24,'Lib'],['scorpius',16.8,-32,34,'Sco'],['sagittarius',18.9,-28,32,'Sgr'],['capricornus',21,-18,26,'Cap'],['aquarius',22.3,-10,34,'Aqr'],['pisces',.9,12,40,'']]
+  .map(([n,ra,de,h,c],i)=>({n,ra:ra*15,de,h,c,i,a:0,img:null,flip:['taurus','scorpius','capricornus'].includes(n)}));   // flip: the art faces the other way from the sky (east is left)
+const ZTH=['แกะ','วัว','คนคู่','ปู','สิงโต','หญิงสาว','คันชั่ง','แมงป่อง','คนยิงธนู','แพะทะเล','คนแบกหม้อน้ำ','ปลา'];
+const ZBYC={};ZOD.forEach(z=>{if(z.c)ZBYC[z.c]=z});
+let zodLoaded=false;
+function loadZodiac(){
+  if(zodLoaded||location.protocol==='file:')return;zodLoaded=true;
+  ZOD.forEach(z=>{const im=new Image();im.onload=()=>{z.img=im;V.dirty=true};im.src=`assets/zodiac/${z.n}.webp`});
+}
+/* resting opacity: the birth sign a little stronger, the rest faint, all hidden when switched off */
+function zodRest(z){return !Z.show?0:(R0&&z.i===R0.signIdx?.34:.15)}
+const Z={show:true,hover:null};
+function zodFade(z,to){gsap.to(z,{a:to,duration:.45,ease:EO,overwrite:'auto',onUpdate:()=>{V.dirty=true}})}
+function zodHover(z){
+  if(Z.hover===z)return;const was=Z.hover;Z.hover=z;
+  if(was)zodFade(was,zodRest(was));if(z)zodFade(z,Z.show?.62:.5);
+}
+function zodAll(){ZOD.forEach(z=>zodFade(z,z===Z.hover?.62:zodRest(z)))}
+/* where a figure sits on screen: centre, and the screen direction of celestial north scaled to its height */
+function zodPlace(z,P){
+  const c=P(z.ra,z.de),n=P(z.ra,Math.min(89.5,z.de+z.h/2));
+  if(c.z!==undefined&&(c.z<.15||n.z<.05))return null;
+  const dx=n.x-c.x,dy=n.y-c.y,half=Math.hypot(dx,dy);if(!(half>4)||half>4000)return null;
+  return{x:c.x,y:c.y,alt:c.alt,h:half*2,rot:Math.atan2(dx,-dy)};
+}
+function paintZodiac(x,P,alphaK=1){
+  for(const z of ZOD){
+    if(!z.img||z.a<.01)continue;const q=zodPlace(z,P);if(!q||q.alt<-12)continue;z.q=q;
+    const w=q.h*z.img.width/z.img.height;
+    x.save();x.globalAlpha=z.a*alphaK;x.translate(q.x,q.y);x.rotate(q.rot);if(z.flip)x.scale(-1,1);x.drawImage(z.img,-w/2,-q.h/2,w,q.h);x.restore();
+  }
+}
+/* the figure under the pointer: a star of its constellation, or inside its outline circle */
+function zodAt(x,y,starIdx){
+  if(starIdx!=null){const s=V.vis[starIdx].s;if(s.c&&ZBYC[s.c])return ZBYC[s.c]}
+  let best=null,bd=1e9;
+  for(const z of ZOD){const q=z.qLive;if(!q)continue;const d=Math.hypot(q.x-x,q.y-y);if(d<q.h*.5&&d<bd){bd=d;best=z}}
+  return best;
+}
+
 /* ---- astronomy (low precision) ---- */
 const jdOf=ms=>ms/864e5+2440587.5;
 const gmst=JD=>((280.46061837+360.98564736629*(JD-2451545))%360+360)%360;
@@ -310,6 +353,10 @@ const css=`#sky{position:fixed;inset:0;width:100%;height:100%;z-index:3;opacity:
 #skyInfo .row{display:flex;gap:8px;flex-wrap:wrap}
 #skyInfo .row .btn{display:inline-flex;align-items:center;gap:6px}
 #skyInfo .hint{color:var(--muted);font-size:13.5px}
+#skZod[aria-pressed=false]{opacity:.6}
+#skyInfo .medal{display:flex;align-items:center;gap:12px}
+#skyInfo .medal i{flex:none;position:relative;width:58px;height:58px;background:url(assets/medallion.webp) center/contain no-repeat;filter:drop-shadow(0 3px 6px rgba(0,0,0,.6))}
+#skyInfo .medal i::after{content:"";position:absolute;left:50%;top:50%;width:8px;height:8px;margin:-4px 0 0 -4px;border-radius:50%;background:#fff6dc;box-shadow:0 0 6px 3px rgba(255,226,170,.85),0 0 16px 6px rgba(242,212,138,.35)}
 #skyName{width:100%;font-size:15px;padding:9px 12px}
 #skyTip{position:fixed;z-index:7;pointer-events:none;padding:5px 10px;border-radius:6px;background:rgba(14,13,17,.92);border:1px solid var(--line);color:var(--gold2);font-size:13px;white-space:nowrap;opacity:0;translate:-50% calc(-100% - 12px)}
 #skyTip small{color:var(--muted);margin-left:6px}
@@ -322,14 +369,17 @@ const css=`#sky{position:fixed;inset:0;width:100%;height:100%;z-index:3;opacity:
 #skyBar .btn[hidden]{display:none}
 #sbGyro[aria-pressed=true]{border-color:var(--gold2);background:rgba(184,149,90,.18)}
 #skDome{display:inline-flex;align-items:center;justify-content:center;gap:8px}
+#bgObs{position:fixed;inset:-4%;z-index:0;pointer-events:none;background:url(assets/obs.webp) center/cover no-repeat;opacity:0;visibility:hidden}
+@media (max-aspect-ratio:1/1){#bgObs{background-image:url(assets/obs_m.webp)}}
 #astro{position:fixed;inset:0;z-index:4;pointer-events:none;perspective:1300px;opacity:0;visibility:hidden}
 #astro .ar{position:absolute;display:block;transform-style:preserve-3d;will-change:transform;filter:drop-shadow(0 4px 6px rgba(0,0,0,.55))}
-#astro .ar svg{display:block;width:100%;height:100%}`;
+#astro .ar svg,#astro .ar img{display:block;width:100%;height:100%}`;
 let built=false,cv,cx,cache,cc,tip;
 function build(){
   if(built)return;built=true;
   const st=document.createElement('style');st.textContent=css;document.head.appendChild(st);
   const stage=$('#stage');
+  $('#bgimg').insertAdjacentHTML('afterend','<div id="bgObs" aria-hidden="true"></div>');
   stage.insertAdjacentHTML('beforeend',`<canvas id="sky" aria-label="แผนที่ท้องฟ้าในวันเกิด" role="img"></canvas>
 <section id="skyForm" class="glass" aria-label="ข้อมูลวันเกิด">
   <h3>ท้องฟ้าคืนที่คุณเกิด</h3>
@@ -359,7 +409,7 @@ function build(){
   $('#bGo').addEventListener('click',()=>{if(S.state==='stars'&&!S.busy&&V.mode==='form')go(openSky)});
   $('#skyForm').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();$('#bGo').click()}});
   cv.addEventListener('pointerdown',onDown);cv.addEventListener('pointermove',onMove);cv.addEventListener('pointerup',onUp);cv.addEventListener('pointercancel',()=>{V.drag=null;V.dirty=true});
-  cv.addEventListener('pointerleave',()=>{V.hover=null;tip.style.opacity=0;V.dirty=true});
+  cv.addEventListener('pointerleave',()=>{V.hover=null;tip.style.opacity=0;zodHover(null);V.dirty=true});
   cv.addEventListener('wheel',onWheel,{passive:false});
   gsap.set('#skyBar',{xPercent:-50});
   $('#sbChart').addEventListener('click',()=>{if(!S.busy)go(toChart)});
@@ -376,10 +426,10 @@ function layout(){
   cv.width=cache.width=W*d;cv.height=cache.height=H*d;cx.setTransform(d,0,0,d,0,0);cc.setTransform(d,0,0,d,0,0);
   const inf=$('#skyInfo');
   V.wide=wide;
-  if(wide){const iw=Math.min(390,W*.32);V.R=Math.max(120,Math.min((W-iw-80)/2-100,(H-150)/2-52));V.cx=(W-iw-16)/2;V.cy=H/2+18;
+  if(wide){const iw=Math.min(390,W*.32);V.R=Math.max(120,Math.min(((W-iw-80)/2-115)/1.186,(H/2-28-71)/1.186));V.cx=(W-iw-16)/2;V.cy=H/2+18;
     Object.assign(inf.style,{top:'68px',right:'16px',bottom:'16px',left:'auto',width:iw+'px',height:'auto',borderRadius:'16px'})}
-  else{V.R=Math.max(100,Math.min(W/2-66,H*.3));V.cx=W/2;V.cy=70+V.R+24;
-    Object.assign(inf.style,{top:(V.cy+V.R+30)+'px',left:'8px',right:'8px',bottom:'8px',width:'auto',height:'auto',borderRadius:'16px'})}
+  else{V.R=Math.max(90,Math.min((W/2-64)/1.186,H*.26));const ro=(V.R+2)*RING_OUT/RING_IN;V.cx=W/2;V.cy=62+ro+18;
+    Object.assign(inf.style,{top:(V.cy+ro+30)+'px',left:'8px',right:'8px',bottom:'8px',width:'auto',height:'auto',borderRadius:'16px'})}
   if(A.els)astroLayout();else{const g=astroGeo(V.R,wide);V.labN=g.labN??null;V.labE=g.labE??null}
   V.dirty=true;
 }
@@ -395,8 +445,9 @@ function project(){
 const starR=(m,k)=>Math.max(.45,(2.7-.5*m))*k;
 /* everything inside the sky, shared by the flat chart and the dome view. o.ok(v) says whether a projected
    point may be drawn; o.blob is the Milky Way puff radius */
-function paintBody(x,{k,ts=1,png=false,blob,ok,alpha=1}){
+function paintBody(x,{k,ts=1,png=false,blob,ok,alpha=1,P=null}){
   const at=s=>V.vis[s.i];
+  if(P){paintZodiac(x,P,alpha);ZOD.forEach(z=>{z.qLive=z.a>.01||Z.show?zodPlace(z,P):null})}
   // Milky Way
   x.globalCompositeOperation='lighter';
   for(const p of V.milky){if(p.alt<-8||!ok(p,true))continue;const rr2=blob*p.m.w;const gg=x.createRadialGradient(p.x,p.y,0,p.x,p.y,rr2);gg.addColorStop(0,'rgba(150,160,190,.055)');gg.addColorStop(1,'rgba(150,160,190,0)');x.fillStyle=gg;x.fillRect(p.x-rr2,p.y-rr2,rr2*2,rr2*2)}
@@ -436,7 +487,7 @@ function paintSky(x,{cx:X,cy:Y,R,alpha=1,png=false,ts=1,ticks=true,labN=null,lab
   x.save();x.beginPath();x.arc(X,Y,R,0,TAU);x.clip();
   x.strokeStyle='rgba(184,149,90,.16)';x.lineWidth=1;x.setLineDash([2,6]);
   [30,60].forEach(a=>{x.beginPath();x.arc(X,Y,R*Math.tan((90-a)*D2R/2),0,TAU);x.stroke()});x.setLineDash([]);   // altitude 30° / 60°
-  paintBody(x,{k,ts,png,blob:R*.075,ok:()=>true,alpha});
+  paintBody(x,{k,ts,png,blob:R*.075,ok:()=>true,alpha,P:V.P});
   x.restore();
   // horizon ring + compass
   x.strokeStyle='rgba(184,149,90,.75)';x.lineWidth=1.5;x.beginPath();x.arc(X,Y,R,0,TAU);x.stroke();
@@ -478,6 +529,7 @@ function ringSVG(kind,rIn,rOut){
   return o+'</svg>';
 }
 const A={on:false,els:null,geo:null};
+const RING_IN=.779,RING_OUT=.924;          // assets/ring.webp: inner and outer edge of the band, as fractions of half its size
 function astroBuild(){
   if(A.els)return;
   $('#stage').insertAdjacentHTML('beforeend','<div id="astro" aria-hidden="true"><i class="ar" data-k="outer"></i><i class="ar" data-k="hours"></i><i class="ar" data-k="az"></i></div>');
@@ -492,16 +544,18 @@ function astroBuild(){
 /* ring radii for the current chart size; also where the compass words go */
 function astroGeo(R,wide){
   const k=clamp(R/300,.75,1.7);
-  const g={az:[R+2,R+11*Math.max(1,k*.9)]};
+  const g={az:[R+2,(R+2)*RING_OUT/RING_IN]};
   if(wide){g.hours=[g.az[1]+4,g.az[1]+4+Math.max(22,20*k)];g.outer=[g.hours[1]+6,g.hours[1]+11];g.labN=g.outer[1]+32*k;g.labE=g.outer[1]+44*k}
-  else{g.labN=g.az[1]+13;g.labE=g.az[1]+27}
+  else{g.labN=g.az[1]+11;g.labE=g.az[1]+25}
   return g;
 }
 function astroLayout(){
   if(!A.els)return;const wide=V.wide,g=A.geo=astroGeo(V.R,wide);
   for(const k of ['az','hours','outer']){const el=A.els[k];
     if(!g[k]){el.style.display='none';el.innerHTML='';continue}
-    el.style.display='';el.innerHTML=ringSVG(k,g[k][0],g[k][1]);const sz=el.firstChild.getAttribute('width');
+    el.style.display='';let sz;
+    if(k==='az'){sz=Math.round(2*g.az[0]/RING_IN);el.innerHTML='<img src="assets/ring.webp" alt="" draggable="false">'}
+    else{el.innerHTML=ringSVG(k,g[k][0],g[k][1]);sz=el.firstChild.getAttribute('width')}
     gsap.set(el,{width:sz,height:sz,left:V.cx,top:V.cy,xPercent:-50,yPercent:-50})}
   V.labN=g.labN??null;V.labE=g.labE??null;
 }
@@ -559,7 +613,7 @@ function paintDome(x){
   // airglow above the horizon
   const h0=sc(dirOf(0,V.cam.yaw*D2R));
   if(h0.z>.03){const g=x.createLinearGradient(h0.x,h0.y,h0.x+upx*H*.6,h0.y+upy*H*.6);g.addColorStop(0,'rgba(70,52,40,.55)');g.addColorStop(.25,'rgba(30,30,48,.35)');g.addColorStop(1,'rgba(8,10,19,0)');x.fillStyle=g;x.fillRect(0,0,W,H)}
-  paintBody(x,{k,blob:F*.042,ok});
+  paintBody(x,{k,blob:F*.042,ok,P:(ra,de)=>{const h=altAz(ra,de,(gmst(V.JD+V.off/24)+V.lon)%360,V.lat);return{alt:h.alt,...sc(dirOf(h.alt,h.az))}}});
   if(pts.length>1){
     // pts run west-to-east around the horizon; keep the run that is on screen in order
     pts.sort((a,b)=>(a.x-b.x)*upy-(a.y-b.y)*upx||0);
@@ -610,6 +664,7 @@ function onDown(e){
   if(V.mode!=='sky'||e.button>0)return;const p=pt(e);PTS.set(e.pointerId,p);cv.setPointerCapture(e.pointerId);
   if(V.view==='dome'&&PTS.size===2){const [a,b]=[...PTS.values()];V.drag=null;V.pan=null;V.pinch={d:Math.hypot(a.x-b.x,a.y-b.y),fov:V.cam.fov};return}
   const i=nearest(p.x,p.y,e.pointerType==='mouse'?18:28);
+  if(e.pointerType!=='mouse')zodHover(zodAt(p.x,p.y,i));          // touch: a tap shows the figure under the finger
   if(i==null){V.sel=null;V.dirty=true;if(V.view==='dome'&&!V.gyro){V.pan={x:p.x,y:p.y,yaw:V.cam.yaw,pitch:V.cam.pitch};cv.classList.add('pan')}return}
   V.drag={i,x:p.x,y:p.y,moved:false};V.ptr=p;
 }
@@ -619,6 +674,7 @@ function onMove(e){
   if(V.pan){const dp=V.cam.fov/innerHeight*1.1;V.cam.yaw=V.pan.yaw-(p.x-V.pan.x)*dp;V.cam.pitch=clamp(V.pan.pitch+(p.y-V.pan.y)*dp,-6,89);V.dirty=true;tip.style.opacity=0;return}
   if(V.drag){if(Math.hypot(p.x-V.drag.x,p.y-V.drag.y)>8)V.drag.moved=true}
   const i=nearest(p.x,p.y,e.pointerType==='mouse'?18:28);
+  if(e.pointerType==='mouse'){const z=zodAt(p.x,p.y,i);zodHover(z);if((i==null||V.vis[i].s.faint)&&z){tip.innerHTML=`ราศี${SIGNS[z.i][0]}<small>กลุ่มดาว${ZTH[z.i]}</small>`;tip.style.opacity=1;tip.style.left=z.qLive.x+'px';tip.style.top=(z.qLive.y-z.qLive.h*.4)+'px';V.hover=null;return}}
   if(i!==V.hover){V.hover=i;if(i!=null&&e.pointerType==='mouse'){const s=V.vis[i].s;tip.innerHTML=s.faint?'ดาวจาง ๆ':`${esc(s.th)}<small>${esc(s.n)}${CONS[s.c]?' · กลุ่มดาว'+CONS[s.c][0]:''}</small>`;tip.style.opacity=1}else tip.style.opacity=0}
   if(V.hover!=null){const v=V.vis[V.hover];tip.style.left=v.x+'px';tip.style.top=v.y+'px'}
 }
@@ -721,12 +777,12 @@ function readingFor(b){
   const age=mi.age,ph=age<1.8||age>27.7?'คืนเดือนมืด จันทร์ซ่อนตัว คุณเกิดมาพร้อมพลังของการเริ่มต้นใหม่และความลึกที่ไม่มีใครมองเห็น':age<7.4?'จันทร์เสี้ยวข้างขึ้น พลังของคุณคือการเติบโตทีละน้อยแต่ไม่หยุด':age<9.2?'จันทร์ครึ่งดวงข้างขึ้น คุณกล้าตัดสินใจและผ่านทางแยกได้เสมอ':age<13.8?'จันทร์ข้างขึ้นใกล้เต็มดวง คุณมีใจที่อยากทำทุกอย่างให้สมบูรณ์':age<15.8?'คืนจันทร์เพ็ญ อารมณ์ของคุณชัดเจนและสว่างไสว ผู้คนมองเห็นตัวตนของคุณได้ง่าย':age<21.5?'จันทร์ข้างแรมยังสว่าง คุณเป็นผู้ให้และส่งต่อสิ่งที่รู้แก่คนอื่น':age<23.3?'จันทร์ครึ่งดวงข้างแรม คุณรู้จักปล่อยวางสิ่งที่ไม่ใช่':'จันทร์เสี้ยวข้างแรม คุณมีปัญญาแบบคนที่ผ่านมามาก และรู้ใจตัวเองดี';
   const when=new Date(b.ms).toLocaleDateString('th-TH',{dateStyle:'long',timeZone:'Asia/Bangkok'})+` · ${String(b.h).padStart(2,'0')}:${String(b.m).padStart(2,'0')} น.`;
   const bsAlt=V.vis[best.s.i].alt;
-  return{sign,mi,ph,when,b,best,bsAlt,above:V.sun.alt>0};
+  return{sign,signIdx:SIGNS.indexOf(sign),mi,ph,when,b,best,bsAlt,above:V.sun.alt>0};
 }
 function infoHTML(r){
   const s=r.best.s;
   return `<div><div class="rd-pos">${esc(r.when)} · ${esc(r.b.city[0])}${r.b.noT?' · เวลาโดยประมาณ':''}</div>
-    <h3>ดาวประจำตัว: ${esc(s.th)}</h3><p class="hint">${esc(s.n)}${CONS[s.c]?' · กลุ่มดาว'+CONS[s.c][0]:''}${r.bsAlt>0?` · สูงจากขอบฟ้า ${Math.round(r.bsAlt)}°`:' · ใต้ขอบฟ้าในขณะนั้น'}</p></div>
+    <div class="medal"><i aria-hidden="true"></i><div><h3>ดาวประจำตัว: ${esc(s.th)}</h3><p class="hint">${esc(s.n)}${CONS[s.c]?' · กลุ่มดาว'+CONS[s.c][0]:''}${r.bsAlt>0?` · สูงจากขอบฟ้า ${Math.round(r.bsAlt)}°`:' · ใต้ขอบฟ้าในขณะนั้น'}</p></div></div></div>
   <p class="rd-text">${STAR_MSG[s.n]}</p>
   <div class="sk-sec"><b>ราศี${r.sign[0]}</b> · ธาตุ${r.sign[1]}<p>${r.sign[2]}</p></div>
   <div class="sk-sec"><b>ดวงจันทร์วันเกิด</b> · ${r.mi.label} ${moonSVG(r.mi,14)}<p>${r.ph}</p></div>
@@ -736,6 +792,7 @@ function infoHTML(r){
     <div class="row" style="margin-top:10px">
       <button class="btn small" id="skUndo" type="button"><svg class="i" aria-hidden="true"><use href="#i-undo"/></svg>ย้อนเส้น</button>
       <button class="btn small" id="skClear" type="button"><svg class="i" aria-hidden="true"><use href="#i-x"/></svg>ล้าง</button>
+      <button class="btn small" id="skZod" type="button" aria-pressed="true"><svg class="i" aria-hidden="true"><use href="#i-flame"/></svg>รูปจักรราศี</button>
       <button class="btn small" id="skAgain" type="button"><svg class="i" aria-hidden="true"><use href="#i-calendar"/></svg>เปลี่ยนวันเกิด</button>
     </div></div>
   <button class="btn" id="skDome" type="button"><svg class="i" aria-hidden="true"><use href="#i-compass"/></svg>มองท้องฟ้ารอบตัว</button>
@@ -751,17 +808,19 @@ async function openSky(){
   $('#skClear').onclick=()=>{V.lines=[];V.sel=null;V.dirty=true;syncTools()};
   $('#skAgain').onclick=()=>{if(V.mode==='sky'&&!S.busy)go(backToForm)};
   $('#skSave').onclick=saveSky;
+  $('#skZod').onclick=()=>{Z.show=!Z.show;$('#skZod').setAttribute('aria-pressed',Z.show);zodAll()};$('#skZod').setAttribute('aria-pressed',Z.show);
+  loadZodiac();ZOD.forEach(z=>{z.a=0});Z.hover=null;
   $('#skDome').onclick=()=>{if(!S.busy)go(toDome)};
   const tl=gsap.timeline();V.mode='anim';V.anim=true;
   tl.add(pOut('#skyForm',{y:40}),0);Sound.whoosh();
-  if(RM()){Object.assign(V,{off:0,scale:1,alpha:0,spin:0});tl.to(V,{alpha:1,duration:.5},.2).set(cv,{autoAlpha:1},.2).add(()=>astroIn(0),.2)}
+  if(RM()){Object.assign(V,{off:0,scale:1,alpha:0,spin:0});tl.to(V,{alpha:1,duration:.5},.2).set(cv,{autoAlpha:1},.2).add(()=>astroIn(0),.2).add(()=>zodAll(),.3)}
   else{
     // the camera falls through space, then the sky of that night wheels into place
     Object.assign(V,{off:-7,scale:.18,alpha:0,spin:-1.2});
     tl.set(cv,{autoAlpha:1},.1).to(STAR,{warp:1,duration:.8,ease:EIO},0).to(STAR,{warp:0,duration:1.4,ease:EO},1)
-      .to('#bgimg',{autoAlpha:.18,duration:1.4,ease:EO},0)
+      .to('#bgObs',{autoAlpha:.5,duration:1.4,ease:EO},0)
       .to(V,{alpha:1,duration:.9,ease:EO},.7).to(V,{scale:1,duration:2.6,ease:'expo.out'},.7)
-      .to(V,{off:0,spin:0,duration:3.4,ease:'expo.out'},.7).add(()=>astroIn(0),.75)
+      .to(V,{off:0,spin:0,duration:3.4,ease:'expo.out'},.7).add(()=>astroIn(0),.75).add(()=>zodAll(),3.2)
       .add(()=>{Sound.chime();buzz([15,40,25])},2.6).to(STAR,{boost:.8,duration:.3,ease:EO},2.6).to(STAR,{boost:0,duration:1.4,ease:EI},2.9);
   }
   tl.add(()=>{V.anim=false;V.dirty=true;V.mode='sky';cv.classList.add('draw')},RM()?.7:3.9)
@@ -782,8 +841,8 @@ async function saveSky(){
   const btn=$('#skSave');if(!btn||btn.disabled||!R0)return;btn.disabled=true;const old=btn.innerHTML;btn.textContent='กำลังสร้าง…';
   try{
     await Promise.all([document.fonts.load("600 64px Cinzel"),document.fonts.load("400 26px 'Noto Serif Thai'",'ก'),document.fonts.load("600 30px 'Noto Serif Thai'",'ก')]).catch(()=>{});
-    const [bg,tl,tr,bl,br]=await Promise.all([loadArt('assets/bg_m.webp'),loadArt('assets/corner-tl.webp'),loadArt('assets/corner-tr.webp'),loadArt('assets/corner-bl.webp'),loadArt('assets/corner-br.webp')]);
-    const W=1080,H=1640,c=document.createElement('canvas');c.width=W;c.height=H;const x=c.getContext('2d'),TH="'Noto Serif Thai',serif",r=R0,name=($('#skyName')?.value||'').trim();
+    const [bg,tl,tr,bl,br,ring,medal]=await Promise.all([loadArt('assets/obs_m.webp'),loadArt('assets/corner-tl.webp'),loadArt('assets/corner-tr.webp'),loadArt('assets/corner-bl.webp'),loadArt('assets/corner-br.webp'),loadArt('assets/ring.webp'),loadArt('assets/medallion.webp')]);
+    const W=1080,H=1820,c=document.createElement('canvas');c.width=W;c.height=H;const x=c.getContext('2d'),TH="'Noto Serif Thai',serif",r=R0,name=($('#skyName')?.value||'').trim();
     x.fillStyle='#0a0a0d';x.fillRect(0,0,W,H);
     if(bg){x.globalAlpha=.4;coverDraw(x,bg,W,H);x.globalAlpha=1}
     let g=x.createLinearGradient(0,0,0,H);g.addColorStop(0,'rgba(8,8,11,.7)');g.addColorStop(1,'rgba(8,8,11,.85)');x.fillStyle=g;x.fillRect(0,0,W,H);
@@ -795,13 +854,18 @@ async function saveSky(){
     x.font=`400 22px ${TH}`;x.fillStyle=PNG.muted;x.fillText(`${r.when} · ${r.b.city[0]}`,W/2,222);
     // the sky, redrawn at print size
     const keep={cx:V.cx,cy:V.cy,R:V.R,scale:V.scale,spin:V.spin,off:V.off};
-    const PY=300+410,PR=390;Object.assign(V,{cx:W/2,cy:PY,R:PR,scale:1,spin:0,off:0});project();   // the chart, whatever the screen shows
-    paintSky(x,{cx:W/2,cy:PY,R:PR,png:true,ts:1.4,ticks:false});
-    {const g=astroGeo(PR,false).az,svg=ringSVG('az',g[0],g[1]),im=new Image();im.src='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(svg);await im.decode();
-      x.save();x.shadowColor='rgba(0,0,0,.6)';x.shadowBlur=10;x.shadowOffsetY=4;x.drawImage(im,W/2-im.width/2,PY-im.height/2);x.restore()}
+    const PY=300+400,PR=328;Object.assign(V,{cx:W/2,cy:PY,R:PR,scale:1,spin:0,off:0});project();   // the chart, whatever the screen shows
+    const za=ZOD.map(z=>z.a);ZOD.forEach(z=>{z.a=zodRest(z)*1.1});   // print the figures at rest, not mid-hover
+    paintSky(x,{cx:W/2,cy:PY,R:PR,png:true,ts:1.4,ticks:false,labN:(PR+2)*RING_OUT/RING_IN+30,labE:(PR+2)*RING_OUT/RING_IN+52});
+    ZOD.forEach((z,i)=>{z.a=za[i]});
+    if(ring){const sz=2*(PR+2)/RING_IN;x.save();x.shadowColor='rgba(0,0,0,.6)';x.shadowBlur=14;x.shadowOffsetY=5;x.drawImage(ring,W/2-sz/2,PY-sz/2,sz,sz);x.restore()}
     Object.assign(V,keep);project();V.dirty=true;
-    let y=PY+PR+118;
-    x.strokeStyle=PNG.line+'.5)';x.lineWidth=1;x.beginPath();x.moveTo(W/2-220,y-34);x.lineTo(W/2+220,y-34);x.stroke();x.fillStyle=PNG.gold2;diamond(x,W/2,y-34,5);
+    let y=PY+(PR+2)*RING_OUT/RING_IN+70;
+    // the birth star set in the medallion
+    const MD=210;if(medal){x.save();x.shadowColor='rgba(0,0,0,.6)';x.shadowBlur=16;x.shadowOffsetY=6;x.drawImage(medal,W/2-MD/2,y,MD,MD);x.restore()}
+    {const cx0=W/2,cy0=y+MD/2;let g2=x.createRadialGradient(cx0,cy0,0,cx0,cy0,56);g2.addColorStop(0,'rgba(255,240,200,.95)');g2.addColorStop(.12,'rgba(255,226,170,.75)');g2.addColorStop(1,'rgba(242,212,138,0)');
+      x.fillStyle=g2;x.beginPath();x.arc(cx0,cy0,56,0,TAU);x.fill();x.strokeStyle='rgba(255,240,200,.8)';x.lineWidth=1.4;x.beginPath();x.moveTo(cx0-34,cy0);x.lineTo(cx0+34,cy0);x.moveTo(cx0,cy0-34);x.lineTo(cx0,cy0+34);x.stroke()}
+    y+=MD+44;
     x.font=`600 30px ${TH}`;x.fillStyle=PNG.gold2;x.fillText(`ดาวประจำตัว: ${r.best.s.th}`,W/2,y+8);
     x.font=`400 22px ${TH}`;x.fillStyle=PNG.muted;x.fillText(`ราศี${r.sign[0]} · ธาตุ${r.sign[1]} · ดวงจันทร์${r.mi.label}`,W/2,y+46);
     x.font=`400 26px ${TH}`;x.fillStyle=PNG.ink;y+=104;for(const l of wrapLines(x,STAR_MSG[r.best.s.n],W-200).slice(0,3)){x.fillText(l,W/2,y);y+=40}
@@ -824,7 +888,7 @@ function stopTick(){if(ticking){ticking=false;gsap.ticker.remove(render)}}
 async function enter(){
   build();setState('stars');layout();V.mode='form';startTick();
   const tl=gsap.timeline();
-  tl.to('#bgimg',{autoAlpha:.45,duration:1,ease:EO},0).add(pIn('#skyForm',{y:50}),.1);
+  tl.to('#bgimg',{autoAlpha:0,duration:1.2,ease:EO},0).fromTo('#bgObs',{autoAlpha:0,scale:1.08},{autoAlpha:.85,scale:1,duration:1.6,ease:EO},0).add(pIn('#skyForm',{y:50}),.1);
   if(!RM())tl.to(STAR,{boost:.5,duration:.4,ease:EO},0).to(STAR,{boost:0,duration:1.2,ease:EI},.4);
   await tlUntil(tl,.5);
   setTimeout(()=>{if(V.mode==='form'&&S.lastPtr==='mouse')$('#bDate').focus({preventScroll:true})},400);
@@ -835,9 +899,9 @@ async function leave(){
   if(V.gyro)gyroOff();astroOut();
   tl.add(pOut('#skyForm',{y:40}),0).add(pOut('#skyInfo',{y:40}),0).add(pOut('#skyBar',{y:30}),0)
     .to(V,{alpha:0,duration:RM()?.3:.7,ease:EI,onUpdate:()=>{V.dirty=true}},0).set(cv,{autoAlpha:0})
-    .to('#bgimg',{autoAlpha:1,duration:1,ease:EO},.2);
+    .to('#bgObs',{autoAlpha:0,duration:.8,ease:EI},0).to('#bgimg',{autoAlpha:1,duration:1,ease:EO},.2);
   await tlDone(tl);V.mode='off';V.view='chart';stopTick();
 }
 function resize(){if(!built||V.mode==='off')return;layout()}
-return{enter,leave,resize,V,_render:render};   // _render: lets a test drive frames by hand
+return{enter,leave,resize,V,_render:render,_zod:ZOD};   // _render: lets a test drive frames by hand
 })();

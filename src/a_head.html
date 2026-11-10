@@ -360,11 +360,17 @@ input[type=range]{width:100%;accent-color:var(--gold);touch-action:auto}
   border:1px solid var(--line);border-radius:999px 999px 14px 14px;background:linear-gradient(180deg,rgba(26,24,30,.55),rgba(14,13,17,.88));color:var(--ink);
   transform-style:preserve-3d;transition:border-color .25s,background-color .25s;will-change:transform}
 .door::before{content:"";position:absolute;inset:7px;border:1px solid rgba(184,149,90,.22);border-radius:999px 999px 9px 9px;pointer-events:none}
+.door{background-size:cover;background-position:center 30%;overflow:hidden}
+.door[data-rite=tarot]{background-image:linear-gradient(180deg,rgba(10,9,12,0) 48%,rgba(10,9,12,.78) 74%,rgba(10,9,12,.95)),url(assets/door-tarot.webp)}
+.door[data-rite=stars]{background-image:linear-gradient(180deg,rgba(10,9,12,0) 48%,rgba(10,9,12,.78) 74%,rgba(10,9,12,.95)),url(assets/door-stars.webp)}
+.door svg.art{display:none}
 .door svg.art{position:absolute;left:50%;top:15%;width:62%;translate:-50% 0;fill:none;stroke:var(--gold);stroke-width:1.2;stroke-linecap:round;stroke-linejoin:round}
 .door svg.art .st{fill:var(--gold2);stroke:none}
 .door b{font-weight:600;font-size:clamp(17px,1.9vw,21px);color:var(--gold2)}
 .door span{font-size:clamp(11.5px,1.2vw,13.5px);color:var(--muted);line-height:1.5;text-align:center}
-.door:hover,.door:focus-visible{border-color:var(--gold2);background:linear-gradient(180deg,rgba(40,35,40,.6),rgba(20,18,22,.9))}
+.door:hover,.door:focus-visible{border-color:var(--gold2)}
+.door::after{content:"";position:absolute;inset:0;border-radius:inherit;background:rgba(255,226,170,.0);transition:background-color .25s;pointer-events:none}
+.door:hover::after,.door:focus-visible::after{background:rgba(255,226,170,.06)}
 .door:focus-visible{outline:2px solid var(--gold2);outline-offset:4px}
 @media (max-width:560px){#rites .doors{gap:12px}.door{width:min(42vw,170px)}}
 </style>
