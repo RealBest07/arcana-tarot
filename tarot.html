@@ -2134,12 +2134,27 @@ function focusReading(i){
    (B) opened cards rise and slowly turn face-down, releasing gold motes →
    (C) camera tilts back; corner deck + spread gather into one floating stack →
    (D) the stack bursts into a turning ring of all 78 cards, which collapses into the deck → setup rises ---- */
+/* Formations for the new-reading burst, one picked at random each time (never twice in a row).
+   Each maps card i of n, the spin s and its tier o (i%2) to a point in unit space; the card is
+   turned along the curve (tangent taken numerically) and the whole shape grows with g.r. */
+const RING_FORMS={
+  ring:  (i,n,s)=>{const t=i/n*TAU+s;return[Math.cos(t),Math.sin(t)]},
+  spiral:(i,n,s)=>{const t=i/n*TAU*2.3+s,r=.26+.74*i/n;return[r*Math.cos(t),r*Math.sin(t)]},
+  twin:  (i,n,s,o)=>{const t=i/n*TAU+(o?s:-s*1.25),r=o?1:.56;return[r*Math.cos(t),r*Math.sin(t)]},
+  star:  (i,n,s)=>{const u=(i/n)*5,k=Math.floor(u),f=u-k,P=j=>{const a=-Math.PI/2+j*Math.PI*.8+s*.5;return[Math.cos(a),Math.sin(a)]};   // a pentagram drawn in one stroke
+    const [ax,ay]=P(k),[bx,by]=P(k+1);return[ax+(bx-ax)*f,ay+(by-ay)*f]},
+  eight: (i,n,s)=>{const u=i/n*TAU+s*.8;return[Math.sin(u)*1.35,Math.sin(2*u)*.62]}
+};
+const TAU=Math.PI*2;
 function ringTL(cards,D){
   const L=S.L,R=Math.min(L.W*.4,L.H*.42,560),n=cards.length,g={r:0,spin:0,lift:140},tl=gsap.timeline();
-  const base=cards.map((c,i)=>({a:i/n*Math.PI*2,tp:stackPose(c.idx,D),w:rand(-1,1)}));
-  const upd=()=>{const k=g.r/R;cards.forEach((c,i)=>{const b=base[i],a=b.a+g.spin;
-    gsap.set(c.el,{x:D.x+Math.cos(a)*g.r,y:D.y+Math.sin(a)*g.r,z:b.tp.z+g.lift+k*36*Math.sin(a*3+g.spin*3),
-      rotation:(a/D2R+90)*k,rotationX:(-18+b.w*8)*k,rotationY:0,scale:1})})};
+  const kinds=Object.keys(RING_FORMS).filter(k=>k!==S.ringKind);S.ringKind=kinds[Math.floor(Math.random()*kinds.length)];
+  const F=RING_FORMS[S.ringKind],sx=S.ringKind==='eight'?Math.min(1,(L.W*.46)/(R*1.35)):1;
+  const base=cards.map((c,i)=>({tp:stackPose(c.idx,D),w:rand(-1,1),o:i%2}));
+  const upd=()=>{const k=g.r/R;cards.forEach((c,i)=>{const b=base[i],[fx,fy]=F(i,n,g.spin,b.o),[gx,gy]=F(i+.05,n,g.spin,b.o);
+    const a=Math.atan2(fy,fx),tan=Math.atan2(gy-fy,(gx-fx)*sx);
+    gsap.set(c.el,{x:D.x+fx*sx*g.r,y:D.y+fy*g.r,z:b.tp.z+g.lift+k*36*Math.sin(a*3+g.spin*3)+(b.o&&S.ringKind==='twin'?40*k:0),
+      rotation:(tan/D2R)*k,rotationX:(-18+b.w*8)*k,rotationY:0,scale:1})})};
   tl.to(g,{r:R,duration:1.7,ease:'expo.out'},0)
     .to(g,{spin:Math.PI*1.4,duration:RING_DUR,ease:'sine.inOut',onUpdate:upd},0)
     .to(g,{r:0,lift:0,duration:1.8,ease:'power3.in'},RING_DUR-1.8)
