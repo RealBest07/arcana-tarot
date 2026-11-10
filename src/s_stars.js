@@ -331,6 +331,7 @@ const ZOD=[
 const ZTH=['แกะ','วัว','คนคู่','ปู','สิงโต','หญิงสาว','คันชั่ง','แมงป่อง','คนยิงธนู','แพะทะเล','คนแบกหม้อน้ำ','ปลา'];
 const ZBYC={};ZOD.forEach(z=>{if(z.c)ZBYC[z.c]=z});
 let zodLoaded=false;
+let typedT='';                               // birth time typed before "unknown time" was ticked
 function loadZodiac(){
   if(zodLoaded||location.protocol==='file:')return;zodLoaded=true;
   ZOD.forEach(z=>{const im=new Image();im.onload=()=>{z.img=im;V.dirty=true};im.src=`assets/zodiac/${z.n}.webp?v=2`});
@@ -394,16 +395,53 @@ function signOf(JD,y){const ay=23.85+(y-2000)*.01397;return Math.floor(((sunPos(
 /* ---- DOM + styles (injected; the main page stays lean) ---- */
 const css=`#sky{position:fixed;inset:0;width:100%;height:100%;z-index:3;opacity:0;visibility:hidden;touch-action:none}
 #sky.draw{cursor:crosshair}
-#skyForm{position:fixed;left:50%;top:50%;z-index:6;width:min(400px,calc(100vw - 32px));padding:22px 22px 20px;display:flex;flex-direction:column;gap:12px;opacity:0;visibility:hidden}
+#skyForm{position:fixed;left:50%;top:50%;z-index:6;width:min(420px,calc(100vw - 32px));padding:58px 26px 16px;display:flex;flex-direction:column;gap:12px;opacity:0;visibility:hidden;
+  border-color:rgba(220,194,140,.45);border-radius:18px;
+  background:radial-gradient(1px 1px at 14% 22%,rgba(255,240,210,.55),transparent 2px),radial-gradient(1px 1px at 82% 14%,rgba(255,240,210,.45),transparent 2px),
+    radial-gradient(1.5px 1.5px at 70% 38%,rgba(255,240,210,.35),transparent 2px),radial-gradient(1px 1px at 30% 64%,rgba(255,240,210,.3),transparent 2px),
+    radial-gradient(1px 1px at 90% 72%,rgba(255,240,210,.35),transparent 2px),radial-gradient(1px 1px at 8% 86%,rgba(255,240,210,.3),transparent 2px),
+    radial-gradient(130% 70% at 50% 0%,rgba(52,62,104,.5),transparent 62%),linear-gradient(180deg,rgba(14,15,24,.9),rgba(10,10,14,.94));
+  box-shadow:0 30px 80px rgba(0,0,0,.6),0 0 0 1px rgba(0,0,0,.5),inset 0 1px 0 rgba(255,236,196,.08)}
+#skyForm .sf-frame{position:absolute;inset:7px;border:1px solid rgba(184,149,90,.16);border-radius:12px;pointer-events:none;--c:rgba(220,194,140,.75);
+  background:linear-gradient(var(--c),var(--c)) 0 0/22px 1px,linear-gradient(var(--c),var(--c)) 0 0/1px 22px,
+    linear-gradient(var(--c),var(--c)) 100% 0/22px 1px,linear-gradient(var(--c),var(--c)) 100% 0/1px 22px,
+    linear-gradient(var(--c),var(--c)) 0 100%/22px 1px,linear-gradient(var(--c),var(--c)) 0 100%/1px 22px,
+    linear-gradient(var(--c),var(--c)) 100% 100%/22px 1px,linear-gradient(var(--c),var(--c)) 100% 100%/1px 22px;background-repeat:no-repeat}
+#skyForm .sf-medal{position:absolute;left:50%;top:-46px;width:92px;height:92px;margin-left:-46px;pointer-events:none;filter:drop-shadow(0 8px 16px rgba(0,0,0,.7))}
+#skyForm .sf-medal::before{content:"";position:absolute;inset:0;background:url(assets/medallion.webp) center/contain no-repeat;animation:sfSpin 90s linear infinite}
+#skyForm .sf-medal::after{content:"";position:absolute;left:50%;top:50%;width:10px;height:10px;margin:-5px 0 0 -5px;border-radius:50%;background:#fff6dc;
+  box-shadow:0 0 8px 4px rgba(255,226,170,.85),0 0 24px 10px rgba(242,212,138,.35);animation:sfPulse 3.2s ease-in-out infinite}
+@keyframes sfSpin{to{transform:rotate(360deg)}}
+@keyframes sfPulse{50%{opacity:.7;transform:scale(.8)}}
+@media (prefers-reduced-motion:reduce){#skyForm .sf-medal::before,#skyForm .sf-medal::after{animation:none}}
+#skyForm .sf-kick{margin:0;text-align:center;font-family:'Cinzel',serif;font-size:11.5px;letter-spacing:.42em;padding-left:.42em;color:var(--gold)}
 #skyForm h3,#skyInfo h3{margin:0;font-weight:600;color:var(--gold2);font-size:20px}
-#skyForm .sub{margin:0 0 4px;color:var(--muted);font-size:14px;line-height:1.6}
-#skyForm label{display:flex;flex-direction:column;gap:5px;font-size:13.5px;color:var(--gold)}
-#skyForm label.chk{flex-direction:row;align-items:center;gap:8px;color:var(--muted)}
+#skyForm h3{margin-top:-4px;text-align:center;font-size:23px;text-shadow:0 0 18px rgba(233,190,110,.25)}
+#skyForm .sf-rule{position:relative;height:9px;margin:0 20%;background:linear-gradient(90deg,transparent,rgba(220,194,140,.6) 30%,rgba(220,194,140,.6) 70%,transparent) center/100% 1px no-repeat}
+#skyForm .sf-rule::after{content:"";position:absolute;left:50%;top:50%;width:7px;height:7px;margin:-3.5px 0 0 -3.5px;background:var(--gold2);transform:rotate(45deg);box-shadow:0 0 8px rgba(242,212,138,.7)}
+#skyForm .sub{text-wrap:balance;margin:0 0 6px;color:var(--muted);font-size:14px;line-height:1.65;text-align:center}
+#skyForm .sf-row{display:grid;grid-template-columns:1.25fr 1fr;gap:10px}
+@media (max-width:420px){#skyForm .sf-row{grid-template-columns:minmax(0,1fr);gap:12px}#skyForm{gap:10px;padding:54px 20px 12px}}
+#skyForm label{display:flex;flex-direction:column;gap:6px;font-size:13px;color:var(--gold);letter-spacing:.02em;min-width:0}
+#skyForm label.chk{flex-direction:row;align-items:center;gap:9px;color:var(--muted);cursor:pointer;margin-top:-2px}
 #skyForm input,#skyForm select,#skyName{background:rgba(22,21,26,.75);border:1px solid var(--line);border-radius:10px;color:var(--ink);padding:10px 12px;font:inherit;font-size:16px;touch-action:auto;color-scheme:dark}
-#skyForm input[type=checkbox]{width:18px;height:18px;padding:0;accent-color:var(--gold)}
-#skyForm input:focus-visible,#skyForm select:focus-visible,#skyName:focus-visible{outline:2px solid var(--gold2);outline-offset:1px}
-#skyForm .btn.primary{margin-top:4px}
-#skyForm .err{margin:0;min-height:1.4em;color:#e0a49a;font-size:13px}
+#skyForm input,#skyForm select{width:100%;box-sizing:border-box;min-width:0;background:linear-gradient(180deg,rgba(6,8,16,.75),rgba(16,16,24,.7));border-color:rgba(184,149,90,.3);
+  box-shadow:inset 0 2px 6px rgba(0,0,0,.45);transition:border-color .2s,box-shadow .2s,opacity .2s}
+#skyForm input:hover:not(:disabled),#skyForm select:hover{border-color:rgba(220,194,140,.55)}
+#skyForm input:focus,#skyForm select:focus{outline:none;border-color:var(--gold2);box-shadow:inset 0 2px 6px rgba(0,0,0,.45),0 0 0 3px rgba(220,194,140,.14),0 0 22px rgba(220,194,140,.14)}
+#skyForm input:disabled{opacity:.35;cursor:not-allowed}
+#skyForm input[type=checkbox]{appearance:none;-webkit-appearance:none;flex:none;width:18px;height:18px;padding:0;border-radius:5px;border:1px solid rgba(220,194,140,.6);background:rgba(6,8,16,.7);box-shadow:none;display:grid;place-content:center;cursor:pointer}
+#skyForm input[type=checkbox]::after{content:"";width:5px;height:9px;margin-top:-2px;border:solid #17130e;border-width:0 2px 2px 0;transform:rotate(45deg) scale(0);transition:transform .15s}
+#skyForm input[type=checkbox]:checked{background:linear-gradient(180deg,#e6cf9c,#c4a066);border-color:#e6cf9c}
+#skyForm input[type=checkbox]:checked::after{transform:rotate(45deg) scale(1)}
+#skyForm input[type=checkbox]:focus-visible{outline:2px solid var(--gold2);outline-offset:2px}
+#skyName:focus-visible{outline:2px solid var(--gold2);outline-offset:1px}
+#skyForm .btn.primary{position:relative;overflow:hidden;margin-top:6px;padding:13px 28px;letter-spacing:.08em;border-radius:12px;
+  background:linear-gradient(180deg,#ecd6a2,#c9a466 55%,#b48c50);box-shadow:0 8px 24px rgba(196,160,102,.25),inset 0 1px 0 rgba(255,250,230,.6)}
+#skyForm .btn.primary::before,#skyForm .btn.primary::after{content:"✦";position:static;display:inline;width:auto;height:auto;margin:0 .7em;background:none;rotate:none;scale:1;font-size:.75em;opacity:.6}
+#skyForm .btn.primary span{position:absolute;inset:0;background:linear-gradient(100deg,transparent 30%,rgba(255,255,255,.45) 50%,transparent 70%);transform:translateX(-120%);transition:transform .8s;pointer-events:none}
+#skyForm .btn.primary:hover span{transform:translateX(120%)}
+#skyForm .err{margin:0;min-height:1.4em;color:#e0a49a;font-size:13px;text-align:center}
 #skyInfo{position:fixed;z-index:6;overflow-y:auto;padding:16px 18px 18px;line-height:1.75;font-size:15px;scrollbar-width:thin;scrollbar-color:var(--gold) transparent;touch-action:pan-y;opacity:0;visibility:hidden;display:flex;flex-direction:column;gap:12px}
 #skyInfo .sk-sec{border-top:1px solid rgba(184,149,90,.22);padding-top:10px}
 #skyInfo .sk-sec b{color:var(--gold2);font-weight:600}
@@ -441,13 +479,16 @@ function build(){
   $('#bgimg').insertAdjacentHTML('afterend','<div id="bgObs" aria-hidden="true"></div>');
   stage.insertAdjacentHTML('beforeend',`<canvas id="sky" aria-label="แผนที่ท้องฟ้าในวันเกิด" role="img"></canvas>
 <section id="skyForm" class="glass" aria-label="ข้อมูลวันเกิด">
+  <div class="sf-frame" aria-hidden="true"></div><div class="sf-medal" aria-hidden="true"></div>
+  <p class="sf-kick" aria-hidden="true">NATAL SKY</p>
   <h3>ท้องฟ้าคืนที่คุณเกิด</h3>
+  <div class="sf-rule" aria-hidden="true"></div>
   <p class="sub">ใส่วัน เวลา และเมืองที่เกิด เพื่อเปิดท้องฟ้าเหนือหัวคุณในวินาทีนั้น</p>
-  <label>วันเกิด<input type="date" id="bDate" min="1900-01-01" required></label>
-  <label>เวลาเกิด<input type="time" id="bTime"></label>
+  <div class="sf-row"><label>วันเกิด<input type="date" id="bDate" min="1900-01-01" required></label>
+  <label>เวลาเกิด<input type="time" id="bTime"></label></div>
   <label class="chk"><input type="checkbox" id="bNoTime">ไม่ทราบเวลาเกิด (ใช้ 21:00 แทน)</label>
   <label>เมืองที่เกิด (เลือกเมืองที่ใกล้ที่สุด)<select id="bCity">${CITIES.map((c,i)=>`<option value="${i}">${c[0]}</option>`).join('')}</select></label>
-  <button class="btn primary" id="bGo" type="button">เปิดท้องฟ้า</button>
+  <button class="btn primary" id="bGo" type="button">เปิดท้องฟ้า<span aria-hidden="true"></span></button>
   <p class="err" id="bErr" aria-live="polite"></p>
 </section>
 <aside id="skyInfo" class="glass" aria-label="ดาวเกิดของคุณ" aria-live="polite"></aside>
@@ -464,7 +505,9 @@ function build(){
   gsap.set('#skyForm',{xPercent:-50,yPercent:-50});
   try{const v=JSON.parse(localStorage.getItem('arcana-birth')||'null');if(v){$('#bDate').value=v.d||'';$('#bTime').value=v.t||'';$('#bNoTime').checked=!!v.u;$('#bCity').value=v.c||0}}catch(e){}
   $('#bDate').max=new Date().toISOString().slice(0,10);
-  $('#bNoTime').addEventListener('change',e=>{$('#bTime').disabled=e.target.checked});$('#bTime').disabled=$('#bNoTime').checked;
+  /* unknown time: show the 21:00 stand-in in the greyed field, and give back what was typed when unticked */
+  const noTime=()=>{const on=$('#bNoTime').checked,t=$('#bTime');if(on&&!t.disabled){typedT=t.value;t.value='21:00'}else if(!on&&t.disabled)t.value=typedT;t.disabled=on};
+  $('#bNoTime').addEventListener('change',noTime);noTime();
   $('#bGo').addEventListener('click',()=>{if(S.state==='stars'&&!S.busy&&V.mode==='form')go(openSky)});
   $('#skyForm').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();$('#bGo').click()}});
   cv.addEventListener('pointerdown',onDown);cv.addEventListener('pointermove',onMove);cv.addEventListener('pointerup',onUp);cv.addEventListener('pointercancel',()=>{V.drag=null;V.dirty=true});
@@ -823,7 +866,7 @@ function birthFrom(){
   if(!t)return{err:'ใส่เวลาเกิด หรือเลือก "ไม่ทราบเวลาเกิด"'};
   const [h,m]=t.split(':').map(Number),ms=Date.UTC(Y,M-1,D,h-7,m);       // Thailand is UTC+7 all year
   if(ms>Date.now())return{err:'วันเกิดต้องไม่อยู่ในอนาคต'};
-  try{localStorage.setItem('arcana-birth',JSON.stringify({d,t:$('#bTime').value,u:noT,c:ci}))}catch(e){}
+  try{localStorage.setItem('arcana-birth',JSON.stringify({d,t:noT?typedT:$('#bTime').value,u:noT,c:ci}))}catch(e){}
   return{Y,M,D,h,m,ms,noT,city:CITIES[ci]};
 }
 function readingFor(b){
