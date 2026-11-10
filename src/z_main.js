@@ -672,13 +672,14 @@ function playIntro(){
   gsap.set('#title',{xPercent:-50,yPercent:-50});
   gsap.set('#tagline',{xPercent:-50,yPercent:-50,y:S.L.H*.13});
   gsap.set('#beginBtn',{xPercent:-50,yPercent:-50,y:S.L.H*.24});
-  if(RM()){tl.to([...Ls,'#tagline','#beginBtn','#halo','#bgimg'],{autoAlpha:1,duration:.6,stagger:.08});return tl}
+  if(RM()){tl.to([...Ls,'#tagline','#beginBtn','#halo','#bgimg'],{autoAlpha:1,duration:.6,stagger:.08}).to('#introSky',{autoAlpha:.55,duration:.6},.2);return tl}
   tl.fromTo('#bgimg',{autoAlpha:0,scale:1.16},{autoAlpha:1,scale:1.04,duration:6.5,ease:'power2.out'},0)   // the cathedral emerges from darkness
     .fromTo('#halo',{autoAlpha:0,scale:.55,rotation:-40},{autoAlpha:1,scale:1,rotation:0,duration:4,ease:BIGO},0)
     .fromTo(Ls,{autoAlpha:0,y:-40,z:-420,rotationX:-85,filter:'blur(18px)'},{autoAlpha:1,y:0,z:0,rotationX:0,filter:'blur(0px)',duration:1.7,ease:EO,stagger:.22},.4)
     .fromTo(Ls,{x:i=>(i-2.5)*sp},{x:0,duration:4.2,ease:'power2.out'},.4)
     .fromTo('#tagline',{autoAlpha:0,y:S.L.H*.13+22,filter:'blur(8px)'},{autoAlpha:1,y:S.L.H*.13,filter:'blur(0px)',duration:1.2,ease:EO},2.2)
-    .fromTo('#beginBtn',{autoAlpha:0,y:S.L.H*.24+26,filter:'blur(8px)'},{autoAlpha:1,y:S.L.H*.24,filter:'blur(0px)',duration:1.1,ease:EO},2.9);
+    .fromTo('#beginBtn',{autoAlpha:0,y:S.L.H*.24+26,filter:'blur(8px)'},{autoAlpha:1,y:S.L.H*.24,filter:'blur(0px)',duration:1.1,ease:EO},2.9)
+    .fromTo('#introSky',{autoAlpha:0},{autoAlpha:.55,duration:3,ease:'power1.inOut'},2.4);   // faint constellations: the stars rite
   S.shimmer=gsap.timeline({repeat:-1,repeatDelay:3.2,delay:4})
     .to('#title .hi',{opacity:.95,duration:.4,stagger:.13,ease:'power2.out'}).to('#title .hi',{opacity:0,duration:.7,stagger:.13,ease:'power2.in'},.4);
   return tl;
@@ -690,7 +691,7 @@ async function leaveIntro(){
   const tl=gsap.timeline();
   S.intro&&S.intro.kill();S.shimmer&&S.shimmer.kill();gsap.to('#title .hi',{opacity:0,duration:.3});
   gsap.to('#title .L',{autoAlpha:1,y:0,z:0,x:0,rotationX:0,filter:'blur(0px)',duration:.4,ease:EO});
-  tl.add(pOut('#tagline',{y:-24}),0).add(pOut('#beginBtn',{y:24}),0)
+  tl.add(pOut('#tagline',{y:-24}),0).add(pOut('#beginBtn',{y:24}),0).to('#introSky',{autoAlpha:0,duration:.8},0)
     .to('#halo',{scale:2.6,autoAlpha:0,rotation:60,duration:RM()?.3:1.8,ease:BIG},0)
     .add(()=>{                                                          // ARCANA letters shrink into the header logo
       const t=$('#title'),st=Flip.getState(t);gsap.set(t,{clearProps:'transform'});$('#logoSlot').appendChild(t);
