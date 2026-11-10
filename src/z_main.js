@@ -849,19 +849,29 @@ function ringTL(cards,D){
   const kinds=Object.keys(RING_FORMS).filter(k=>k!==S.ringKind);S.ringKind=kinds[Math.floor(Math.random()*kinds.length)];
   const F=RING_FORMS[S.ringKind],sx=S.ringKind==='eight'?Math.min(1,(L.W*.46)/(R*1.35)):1;
   const base=cards.map((c,i)=>({tp:stackPose(c.idx,D),w:rand(-1,1),o:i%2}));
-  const upd=()=>{const k=g.r/R;cards.forEach((c,i)=>{const b=base[i],[fx,fy]=F(i,n,g.spin,b.o),[gx,gy]=F(i+.05,n,g.spin,b.o);
+  const at=(i,spin,r,lift)=>{const b=base[i],k=r/R,[fx,fy]=F(i,n,spin,b.o),[gx,gy]=F(i+.05,n,spin,b.o);
     const a=Math.atan2(fy,fx),tan=Math.atan2(gy-fy,(gx-fx)*sx);
-    gsap.set(c.el,{x:D.x+fx*sx*g.r,y:D.y+fy*g.r,z:b.tp.z+g.lift+k*36*Math.sin(a*3+g.spin*3)+(b.o&&S.ringKind==='twin'?40*k:0),
-      rotation:(tan/D2R)*k,rotationX:(-18+b.w*8)*k,rotationY:0,scale:1})})};
+    return{x:D.x+fx*sx*r,y:D.y+fy*r,z:b.tp.z+lift+k*36*Math.sin(a*3+spin*3)+(b.o&&S.ringKind==='twin'?40*k:0),
+      rotation:(tan/D2R)*k,rotationX:(-18+b.w*8)*k,rotationY:0,scale:1}};
+  const upd=()=>cards.forEach((c,i)=>gsap.set(c.el,at(i,g.spin,g.r,g.lift)));
+  // the formation turns, then bursts outward and every card is drawn back into one deck at the centre
+  const SPIN=Math.PI*1.25,tB=RING_BURST,burst=cards.map((c,i)=>{
+    const p=at(i,SPIN,R,140),dx=p.x-D.x,dy=p.y-D.y,len=Math.hypot(dx,dy),a=len>20?Math.atan2(dy,dx):rand(0,TAU),d=R*rand(.4,.8);
+    return{x:p.x+Math.cos(a)*d,y:p.y+Math.sin(a)*d,z:p.z+rand(80,280),rotation:p.rotation+rand(-170,170),rotationX:rand(-55,55),rotationY:rand(-45,45),scale:1}});
   tl.to(g,{r:R,duration:1.7,ease:'expo.out'},0)
-    .to(g,{spin:Math.PI*1.4,duration:RING_DUR,ease:'sine.inOut',onUpdate:upd},0)
-    .to(g,{r:0,lift:0,duration:1.8,ease:'power3.in'},RING_DUR-1.8)
-    .add(()=>cards.forEach((c,i)=>gsap.set(c.el,base[i].tp)),RING_DUR)
-    .add(()=>Sound.whoosh(),0).add(()=>Sound.whoosh(),RING_DUR-1.8)
+    .to(g,{spin:SPIN,duration:tB,ease:'sine.in',onUpdate:upd},0)
+    .add(()=>{Sound.whoosh();buzz(18)},tB)
+    .to(STAR,{boost:1,duration:.25,ease:EO},tB).to(STAR,{boost:0,duration:1.2,ease:EI},tB+.25);
+  cards.forEach((c,i)=>{
+    tl.to(c.el,{...burst[i],duration:.55,ease:'power3.out'},tB)
+      .to(c.el,{...base[i].tp,rotationX:0,rotationY:0,duration:1,ease:'power3.inOut'},tB+.55+Math.random()*.45);
+  });
+  tl.add(()=>cards.forEach((c,i)=>gsap.set(c.el,base[i].tp)),RING_DUR)
+    .add(()=>Sound.whoosh(),0)
     .to(STAR,{warp:.35,duration:1.1,ease:EIO},.2).to(STAR,{warp:0,duration:1.6,ease:EO},2.2);
   return tl;
 }
-const RING_DUR=4.8;
+const RING_BURST=3.1,RING_DUR=RING_BURST+2.05;
 async function newReading(){
   const L=S.L=computeLayout(),tl=gsap.timeline(),picked=S.picked.slice(),shown=picked.filter(c=>c.revealed),D=L.deckSetup;
   unzoom('drop');fxReset();setState('gather');S.armed=null;
