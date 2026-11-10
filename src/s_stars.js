@@ -321,7 +321,10 @@ const css=`#sky{position:fixed;inset:0;width:100%;height:100%;z-index:3;opacity:
 #skyBar .btn{display:inline-flex;align-items:center;gap:6px}
 #skyBar .btn[hidden]{display:none}
 #sbGyro[aria-pressed=true]{border-color:var(--gold2);background:rgba(184,149,90,.18)}
-#skDome{display:inline-flex;align-items:center;justify-content:center;gap:8px}`;
+#skDome{display:inline-flex;align-items:center;justify-content:center;gap:8px}
+#astro{position:fixed;inset:0;z-index:4;pointer-events:none;perspective:1300px;opacity:0;visibility:hidden}
+#astro .ar{position:absolute;display:block;transform-style:preserve-3d;will-change:transform;filter:drop-shadow(0 4px 6px rgba(0,0,0,.55))}
+#astro .ar svg{display:block;width:100%;height:100%}`;
 let built=false,cv,cx,cache,cc,tip;
 function build(){
   if(built)return;built=true;
@@ -372,10 +375,12 @@ function layout(){
   const W=innerWidth,H=innerHeight,wide=W>=900&&W/H>=1.15,d=Math.min(devicePixelRatio||1,2);
   cv.width=cache.width=W*d;cv.height=cache.height=H*d;cx.setTransform(d,0,0,d,0,0);cc.setTransform(d,0,0,d,0,0);
   const inf=$('#skyInfo');
-  if(wide){const iw=Math.min(390,W*.32);V.R=Math.max(120,Math.min((W-iw-80)/2,(H-150)/2));V.cx=(W-iw-16)/2;V.cy=H/2+18;
+  V.wide=wide;
+  if(wide){const iw=Math.min(390,W*.32);V.R=Math.max(120,Math.min((W-iw-80)/2-100,(H-150)/2-52));V.cx=(W-iw-16)/2;V.cy=H/2+18;
     Object.assign(inf.style,{top:'68px',right:'16px',bottom:'16px',left:'auto',width:iw+'px',height:'auto',borderRadius:'16px'})}
-  else{V.R=Math.max(110,Math.min(W/2-54,H*.3));V.cx=W/2;V.cy=70+V.R+24;
+  else{V.R=Math.max(100,Math.min(W/2-66,H*.3));V.cx=W/2;V.cy=70+V.R+24;
     Object.assign(inf.style,{top:(V.cy+V.R+30)+'px',left:'8px',right:'8px',bottom:'8px',width:'auto',height:'auto',borderRadius:'16px'})}
+  if(A.els)astroLayout();else{const g=astroGeo(V.R,wide);V.labN=g.labN??null;V.labE=g.labE??null}
   V.dirty=true;
 }
 /* project every object for the current time offset */
@@ -422,7 +427,7 @@ function paintBody(x,{k,ts=1,png=false,blob,ok,alpha=1}){
     for(const [a,b] of V.lines){const p=V.vis[a],q=V.vis[b];if(!ok(p,true)||!ok(q,true))continue;x.moveTo(p.x,p.y);x.lineTo(q.x,q.y)}x.stroke();x.shadowBlur=0;
     const used=new Set(V.lines.flat());x.fillStyle='#fff6dc';for(const i of used){const v=V.vis[i];if(!ok(v))continue;x.beginPath();x.arc(v.x,v.y,starR(Math.min(v.s.m,2),k)+1.2,0,TAU);x.fill()}}
 }
-function paintSky(x,{cx:X,cy:Y,R,alpha=1,png=false,ts=1}){
+function paintSky(x,{cx:X,cy:Y,R,alpha=1,png=false,ts=1,ticks=true,labN=null,labE=null}){
   const k=clamp(R/300,.75,1.7);
   x.save();x.globalAlpha=alpha;
   // the dome seen from below, flattened: zenith in the middle, horizon on the rim
@@ -435,11 +440,90 @@ function paintSky(x,{cx:X,cy:Y,R,alpha=1,png=false,ts=1}){
   x.restore();
   // horizon ring + compass
   x.strokeStyle='rgba(184,149,90,.75)';x.lineWidth=1.5;x.beginPath();x.arc(X,Y,R,0,TAU);x.stroke();
-  x.strokeStyle='rgba(184,149,90,.3)';x.lineWidth=1;x.beginPath();x.arc(X,Y,R+7*k,0,TAU);x.stroke();
-  for(let i=0;i<72;i++){const a=i*5*D2R+V.spin,l=i%18===0?10:i%2?3:5;x.beginPath();x.moveTo(X-Math.sin(a)*(R+7*k),Y-Math.cos(a)*(R+7*k));x.lineTo(X-Math.sin(a)*(R+7*k+l*k),Y-Math.cos(a)*(R+7*k+l*k));x.stroke()}
+  if(ticks){x.strokeStyle='rgba(184,149,90,.3)';x.lineWidth=1;x.beginPath();x.arc(X,Y,R+7*k,0,TAU);x.stroke();
+  for(let i=0;i<72;i++){const a=i*5*D2R+V.spin,l=i%18===0?10:i%2?3:5;x.beginPath();x.moveTo(X-Math.sin(a)*(R+7*k),Y-Math.cos(a)*(R+7*k));x.lineTo(X-Math.sin(a)*(R+7*k+l*k),Y-Math.cos(a)*(R+7*k+l*k));x.stroke()}}
   x.font=`600 ${Math.round(Math.max(11.5,12.5*Math.min(k,1.3))*ts)}px 'Noto Serif Thai',serif`;x.fillStyle='#dcc28c';x.textAlign='center';x.textBaseline='middle';
-  ZH.forEach((t,i)=>{const a=i*Math.PI/2+V.spin,d=R+(i%2?30*k+60*(ts-1):26*k+8*(ts-1));x.fillText(t,X-Math.sin(a)*d,Y-Math.cos(a)*d)});
+  ZH.forEach((t,i)=>{const a=i*Math.PI/2+V.spin,d=i%2?(labE??R+30*k+60*(ts-1)):(labN??R+26*k+8*(ts-1));x.fillText(t,X-Math.sin(a)*d,Y-Math.cos(a)*d)});
   x.restore();
+}
+
+/* ---- the astrolabe: brass rings around the chart, real DOM elements turned in 3D (CSS perspective).
+   a1  azimuth ring on the horizon, turns with the sky's compass
+   a2  hour ring (wide screens): turns so the hour of birth sits under the index; it winds back
+       through the seven hours the sky wheels through as it opens
+   a3  outer frame (wide screens) carrying the index; it only tilts
+   They tumble in from edge-on and lie flat as the sky locks to the moment of birth. ---- */
+const ROMAN24=['XXIV','I','II','III','IV','V','VI','VII','VIII','IX','X','XI','XII','XIII','XIV','XV','XVI','XVII','XVIII','XIX','XX','XXI','XXII','XXIII'];
+let ringN=0;
+function brassDefs(id){return`<defs><linearGradient id="${id}" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f1d79c"/><stop offset=".28" stop-color="#a77f42"/><stop offset=".5" stop-color="#e2c27e"/><stop offset=".74" stop-color="#7a5a2c"/><stop offset="1" stop-color="#c9a461"/></linearGradient></defs>`}
+const band=(a,b)=>`M${-b} 0a${b} ${b} 0 1 0 ${2*b} 0a${b} ${b} 0 1 0 ${-2*b} 0ZM${-a} 0a${a} ${a} 0 1 1 ${2*a} 0a${a} ${a} 0 1 1 ${-2*a} 0Z`;
+/* one ring as an SVG string; rIn/rOut in px, drawn in a box of side 2·(rOut+pad) */
+function ringSVG(kind,rIn,rOut){
+  const id='br'+(ringN++),pad=kind==='outer'?rOut*.0+16:4,S=rOut+pad,w=rOut-rIn,mid=(rIn+rOut)/2;
+  let o=`<svg xmlns="http://www.w3.org/2000/svg" viewBox="${-S} ${-S} ${2*S} ${2*S}" width="${2*S}" height="${2*S}">${brassDefs(id)}`;
+  o+=`<path d="${band(rIn,rOut)}" fill="url(#${id})" fill-rule="evenodd" stroke="#3b2a12" stroke-width="1"/>`;
+  o+=`<circle r="${rOut-1.2}" fill="none" stroke="rgba(255,240,200,.45)" stroke-width=".7"/><circle r="${rIn+1.2}" fill="none" stroke="rgba(40,26,10,.55)" stroke-width=".7"/>`;
+  const tick=(a,r0,r1,sw,col)=>{const s=Math.sin(a*D2R),c=Math.cos(a*D2R);return`<line x1="${(s*r0).toFixed(2)}" y1="${(-c*r0).toFixed(2)}" x2="${(s*r1).toFixed(2)}" y2="${(-c*r1).toFixed(2)}" stroke="${col}" stroke-width="${sw}"/>`};
+  if(kind==='az'){
+    for(let i=0;i<72;i++){const big=i%18===0,mid6=i%6===0;o+=tick(i*5,rIn+1.5,big?rOut-1.5:mid6?rIn+w*.7:rIn+w*.42,big?1.4:.8,'#2e200d')}
+    for(let i=0;i<4;i++){const a=i*90*D2R,s=Math.sin(a),c=Math.cos(a),d=w*.32;o+=`<path d="M${s*(mid+d)} ${-c*(mid+d)}L${s*mid+c*d*.8} ${-c*mid+s*d*.8}L${s*(mid-d)} ${-c*(mid-d)}L${s*mid-c*d*.8} ${-c*mid-s*d*.8}Z" fill="#fff0c8" opacity=".85"/>`}
+  }else if(kind==='hours'){
+    for(let i=0;i<96;i++){const h=i%4===0;o+=tick(i*3.75,rOut-1.5,h?rOut-w*.36:rOut-w*.18,h?1.1:.6,'#2e200d')}
+    const fs=Math.max(10,w*.5);
+    for(let h=0;h<24;h++){if(h%3)continue;o+=`<text transform="rotate(${h*15}) translate(0 ${-(rIn+w*.38)})" font-family="Cinzel,serif" font-size="${fs.toFixed(1)}" fill="#2a1c0b" text-anchor="middle" dominant-baseline="middle">${ROMAN24[h]}</text>`}
+  }else{ // outer frame with studs and the index
+    for(let i=0;i<12;i++){const a=i*30*D2R;o+=`<circle cx="${(Math.sin(a)*mid).toFixed(2)}" cy="${(-Math.cos(a)*mid).toFixed(2)}" r="${(w*.28).toFixed(2)}" fill="#fff0c8" opacity=".7" stroke="#3b2a12" stroke-width=".6"/>`}
+    o+=`<path d="M0 ${-rIn+14}L-7 ${-rOut-12}L7 ${-rOut-12}Z" fill="url(#${id})" stroke="#3b2a12" stroke-width="1"/><circle cy="${-rOut-12}" r="3.2" fill="#fff0c8" stroke="#3b2a12" stroke-width=".8"/>`;
+  }
+  return o+'</svg>';
+}
+const A={on:false,els:null,geo:null};
+function astroBuild(){
+  if(A.els)return;
+  $('#stage').insertAdjacentHTML('beforeend','<div id="astro" aria-hidden="true"><i class="ar" data-k="outer"></i><i class="ar" data-k="hours"></i><i class="ar" data-k="az"></i></div>');
+  A.els={outer:$('#astro .ar[data-k=outer]'),hours:$('#astro .ar[data-k=hours]'),az:$('#astro .ar[data-k=az]')};
+  addEventListener('pointermove',e=>{
+    if(!A.on||e.pointerType!=='mouse'||RM()||V.view!=='chart')return;
+    const px=e.clientX/innerWidth-.5,py=e.clientY/innerHeight-.5;
+    A.q.forEach(([rx,ry],i)=>{const f=[1,.7,.45][i];rx(-py*14*f);ry(px*18*f)});
+  });
+  A.q=['outer','hours','az'].map(k=>[gsap.quickTo(A.els[k],'rotationX',{duration:1.2,ease:EO}),gsap.quickTo(A.els[k],'rotationY',{duration:1.2,ease:EO})]);
+}
+/* ring radii for the current chart size; also where the compass words go */
+function astroGeo(R,wide){
+  const k=clamp(R/300,.75,1.7);
+  const g={az:[R+2,R+11*Math.max(1,k*.9)]};
+  if(wide){g.hours=[g.az[1]+4,g.az[1]+4+Math.max(22,20*k)];g.outer=[g.hours[1]+6,g.hours[1]+11];g.labN=g.outer[1]+32*k;g.labE=g.outer[1]+44*k}
+  else{g.labN=g.az[1]+13;g.labE=g.az[1]+27}
+  return g;
+}
+function astroLayout(){
+  if(!A.els)return;const wide=V.wide,g=A.geo=astroGeo(V.R,wide);
+  for(const k of ['az','hours','outer']){const el=A.els[k];
+    if(!g[k]){el.style.display='none';el.innerHTML='';continue}
+    el.style.display='';el.innerHTML=ringSVG(k,g[k][0],g[k][1]);const sz=el.firstChild.getAttribute('width');
+    gsap.set(el,{width:sz,height:sz,left:V.cx,top:V.cy,xPercent:-50,yPercent:-50})}
+  V.labN=g.labN??null;V.labE=g.labE??null;
+}
+/* in-plane turn of the azimuth and hour rings, kept in step with the sky every frame */
+function astroSync(){
+  if(!A.on||!A.els)return;
+  gsap.set(A.els.az,{rotation:-V.spin/D2R*1});
+  if(A.geo&&A.geo.hours&&R0){const h=R0.b.h+R0.b.m/60+V.off;gsap.set(A.els.hours,{rotation:-h*15})}
+}
+function astroIn(delay=0){
+  astroBuild();astroLayout();A.on=true;const els=['outer','hours','az'].map(k=>A.els[k]);
+  gsap.set('#astro',{autoAlpha:1});
+  if(RM()){gsap.fromTo(els,{autoAlpha:0},{autoAlpha:1,duration:.5,delay});return}
+  // each ring tumbles in from edge-on, on its own axis, and settles flat as the sky locks
+  const from=[{rotationX:78,rotationY:-30,scale:1.35},{rotationX:-64,rotationY:52,scale:1.2},{rotationX:20,rotationY:82,scale:1.1}];
+  els.forEach((el,i)=>gsap.fromTo(el,{...from[i],autoAlpha:0,z:180},{rotationX:0,rotationY:0,scale:1,z:0,autoAlpha:1,duration:2.6+i*.25,ease:'expo.out',delay:delay+i*.12,overwrite:'auto'}));
+}
+function astroOut(mode='fade'){
+  if(!A.els||!A.on)return;A.on=mode==='lift'?'lift':false;const els=['outer','hours','az'].map(k=>A.els[k]);
+  if(RM()||mode==='fade'){gsap.to(els,{autoAlpha:0,duration:.35,overwrite:'auto',onComplete:()=>{if(!A.on)gsap.set('#astro',{autoAlpha:0})}});return}
+  // into the dome: the rings swing up past the viewer
+  els.forEach((el,i)=>gsap.to(el,{rotationX:-70-i*8,scale:1.9+i*.25,z:300,autoAlpha:0,duration:1+i*.12,ease:'power3.in',overwrite:'auto'}));
 }
 
 /* ---- dome view: standing under the sky. A pinhole camera with yaw (azimuth looked at), pitch (altitude)
@@ -499,8 +583,9 @@ function render(){
   if(V.mode==='off'||V.mode==='form')return;
   const W=innerWidth,H=innerHeight,dome=V.view==='dome';
   if(V.anim||V.dirty){cc.clearRect(0,0,W,H);
-    if(dome){projectDome();paintDome(cc)}else{project();paintSky(cc,{cx:V.cx,cy:V.cy,R:V.R*V.scale})}
+    if(dome){projectDome();paintDome(cc)}else{project();paintSky(cc,{cx:V.cx,cy:V.cy,R:V.R*V.scale,ticks:!A.on,labN:V.labN&&V.labN*V.scale,labE:V.labE&&V.labE*V.scale})}
     V.dirty=false}
+  astroSync();
   cx.clearRect(0,0,W,H);cx.globalAlpha=V.alpha;cx.drawImage(cache,0,0,W,H);
   // live overlay: rubber-band line, selected / hovered star
   const k=dome?clamp(V.F/420,1,2.4):clamp(V.R/300,.75,1.7);
@@ -589,7 +674,8 @@ async function toDome(){
   // face the birth star; start looking straight up, which is what the chart shows, then lower the gaze
   const yaw=b&&b.alt>0?b.az/D2R:180,pitch=clamp(((b&&b.alt)||40)-20,20,32);   // low enough that the ridge shows
   const t1=gsap.timeline();
-  t1.add(pOut('#skyInfo',{y:40}),0).to(V,{alpha:0,duration:rm?.2:.45,ease:EI,onUpdate:()=>{V.dirty=true}},0);
+  astroOut('lift');
+  t1.add(pOut('#skyInfo',{y:40}),0).to(V,{alpha:0,duration:rm?.2:.45,ease:EI,onUpdate:()=>{V.dirty=true}},rm?0:.25);
   await tlDone(t1);
   V.view='dome';V.anim=true;Object.assign(V.cam,rm?{yaw,pitch,fov:78}:{yaw:yaw-40,pitch:88,fov:115});
   const t2=gsap.timeline();
@@ -606,7 +692,7 @@ async function toChart(){
   if(!rm)t1.to(V.cam,{pitch:88,fov:115,duration:1.1,ease:'expo.in'},0);
   t1.to(V,{alpha:0,duration:.35,ease:EI},rm?0:.8);
   await tlDone(t1);
-  V.view='chart';V.anim=false;V.dirty=true;
+  V.view='chart';V.anim=false;V.dirty=true;astroIn(.05);
   const t2=gsap.timeline();t2.to(V,{alpha:1,duration:.5,ease:EO},0).add(pIn('#skyInfo',{y:40}),0);
   await tlDone(t2);
   V.mode='sky';syncTools();
@@ -668,14 +754,14 @@ async function openSky(){
   $('#skDome').onclick=()=>{if(!S.busy)go(toDome)};
   const tl=gsap.timeline();V.mode='anim';V.anim=true;
   tl.add(pOut('#skyForm',{y:40}),0);Sound.whoosh();
-  if(RM()){Object.assign(V,{off:0,scale:1,alpha:0,spin:0});tl.to(V,{alpha:1,duration:.5},.2).set(cv,{autoAlpha:1},.2)}
+  if(RM()){Object.assign(V,{off:0,scale:1,alpha:0,spin:0});tl.to(V,{alpha:1,duration:.5},.2).set(cv,{autoAlpha:1},.2).add(()=>astroIn(0),.2)}
   else{
     // the camera falls through space, then the sky of that night wheels into place
     Object.assign(V,{off:-7,scale:.18,alpha:0,spin:-1.2});
     tl.set(cv,{autoAlpha:1},.1).to(STAR,{warp:1,duration:.8,ease:EIO},0).to(STAR,{warp:0,duration:1.4,ease:EO},1)
       .to('#bgimg',{autoAlpha:.18,duration:1.4,ease:EO},0)
       .to(V,{alpha:1,duration:.9,ease:EO},.7).to(V,{scale:1,duration:2.6,ease:'expo.out'},.7)
-      .to(V,{off:0,spin:0,duration:3.4,ease:'expo.out'},.7)
+      .to(V,{off:0,spin:0,duration:3.4,ease:'expo.out'},.7).add(()=>astroIn(0),.75)
       .add(()=>{Sound.chime();buzz([15,40,25])},2.6).to(STAR,{boost:.8,duration:.3,ease:EO},2.6).to(STAR,{boost:0,duration:1.4,ease:EI},2.9);
   }
   tl.add(()=>{V.anim=false;V.dirty=true;V.mode='sky';cv.classList.add('draw')},RM()?.7:3.9)
@@ -684,7 +770,7 @@ async function openSky(){
   await tlDone(tl);
 }
 async function backToForm(){
-  if(V.gyro)gyroOff();V.view='chart';V.mode='anim';cv.classList.remove('draw');tip.style.opacity=0;
+  if(V.gyro)gyroOff();V.view='chart';V.mode='anim';astroOut();cv.classList.remove('draw');tip.style.opacity=0;
   const tl=gsap.timeline();
   tl.add(pOut('#skyInfo',{y:40}),0).to(V,{alpha:0,scale:RM()?1:.7,duration:RM()?.3:.8,ease:EI,onUpdate:()=>{V.dirty=true;V.anim=true}},0).set(cv,{autoAlpha:0})
     .add(()=>{V.anim=false;V.mode='form'}).add(pIn('#skyForm',{y:40}));
@@ -710,7 +796,9 @@ async function saveSky(){
     // the sky, redrawn at print size
     const keep={cx:V.cx,cy:V.cy,R:V.R,scale:V.scale,spin:V.spin,off:V.off};
     const PY=300+410,PR=390;Object.assign(V,{cx:W/2,cy:PY,R:PR,scale:1,spin:0,off:0});project();   // the chart, whatever the screen shows
-    paintSky(x,{cx:W/2,cy:PY,R:PR,png:true,ts:1.4});
+    paintSky(x,{cx:W/2,cy:PY,R:PR,png:true,ts:1.4,ticks:false});
+    {const g=astroGeo(PR,false).az,svg=ringSVG('az',g[0],g[1]),im=new Image();im.src='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(svg);await im.decode();
+      x.save();x.shadowColor='rgba(0,0,0,.6)';x.shadowBlur=10;x.shadowOffsetY=4;x.drawImage(im,W/2-im.width/2,PY-im.height/2);x.restore()}
     Object.assign(V,keep);project();V.dirty=true;
     let y=PY+PR+118;
     x.strokeStyle=PNG.line+'.5)';x.lineWidth=1;x.beginPath();x.moveTo(W/2-220,y-34);x.lineTo(W/2+220,y-34);x.stroke();x.fillStyle=PNG.gold2;diamond(x,W/2,y-34,5);
@@ -744,7 +832,7 @@ async function enter(){
 async function leave(){
   setState('gather');V.mode='anim';cv.classList.remove('draw');tip.style.opacity=0;
   const tl=gsap.timeline();
-  if(V.gyro)gyroOff();
+  if(V.gyro)gyroOff();astroOut();
   tl.add(pOut('#skyForm',{y:40}),0).add(pOut('#skyInfo',{y:40}),0).add(pOut('#skyBar',{y:30}),0)
     .to(V,{alpha:0,duration:RM()?.3:.7,ease:EI,onUpdate:()=>{V.dirty=true}},0).set(cv,{autoAlpha:0})
     .to('#bgimg',{autoAlpha:1,duration:1,ease:EO},.2);
