@@ -442,6 +442,47 @@ const css=`#sky{position:fixed;inset:0;width:100%;height:100%;z-index:3;opacity:
 #skyForm .btn.primary span{position:absolute;inset:0;background:linear-gradient(100deg,transparent 30%,rgba(255,255,255,.45) 50%,transparent 70%);transform:translateX(-120%);transition:transform .8s;pointer-events:none}
 #skyForm .btn.primary:hover span{transform:translateX(120%)}
 #skyForm .err{margin:0;min-height:1.4em;color:#e0a49a;font-size:13px;text-align:center}
+#skyForm .sf-field{display:flex;align-items:center;justify-content:space-between;gap:8px;width:100%;box-sizing:border-box;min-width:0;padding:10px 12px;border-radius:10px;cursor:pointer;
+  font:inherit;font-size:16px;color:var(--ink);text-align:left;border:1px solid rgba(184,149,90,.3);background:linear-gradient(180deg,rgba(6,8,16,.75),rgba(16,16,24,.7));
+  box-shadow:inset 0 2px 6px rgba(0,0,0,.45);transition:border-color .2s,box-shadow .2s}
+#skyForm .sf-field .v{overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+#skyForm .sf-field .v.ph{color:var(--muted)}
+#skyForm .sf-field .i{flex:none;width:17px;height:17px;color:var(--gold2)}
+#skyForm .sf-field:hover{border-color:rgba(220,194,140,.55)}
+#skyForm .sf-field:focus-visible,#skyForm .sf-field[aria-expanded=true]{outline:none;border-color:var(--gold2);box-shadow:inset 0 2px 6px rgba(0,0,0,.45),0 0 0 3px rgba(220,194,140,.14),0 0 22px rgba(220,194,140,.14)}
+.sf-cal{position:absolute;z-index:3;left:14px;right:14px;padding:14px 14px 10px;border-radius:14px;border:1px solid rgba(220,194,140,.5);color:var(--ink);
+  background:radial-gradient(120% 60% at 50% 0%,rgba(60,70,118,.55),transparent 65%),linear-gradient(180deg,#10111c,#09090e);
+  box-shadow:0 24px 60px rgba(0,0,0,.75),0 0 0 1px rgba(0,0,0,.6),inset 0 1px 0 rgba(255,236,196,.1)}
+.sf-cal[hidden]{display:none}
+.sf-cal::before{content:"";position:absolute;inset:5px;border:1px solid rgba(184,149,90,.14);border-radius:10px;pointer-events:none}
+.cal-head{display:flex;align-items:center;gap:6px;margin-bottom:10px}
+.cal-head button{font:inherit;color:var(--gold2);background:none;border:1px solid transparent;border-radius:9px;cursor:pointer}
+.cal-nav{width:36px;height:36px;display:grid;place-content:center;font-size:22px;line-height:1}
+.cal-nav:hover:not(:disabled),.cal-title:hover{border-color:rgba(220,194,140,.4);background:rgba(220,194,140,.06)}
+.cal-nav:disabled{opacity:.25;cursor:default}
+.cal-title{flex:1;height:36px;font-size:17px;font-weight:600;letter-spacing:.02em;text-shadow:0 0 14px rgba(233,190,110,.3)}
+.cal-title small{margin-left:.45em;font-family:'Cinzel',serif;font-size:11px;font-weight:400;color:var(--gold);letter-spacing:.12em}
+.cal-title::after{content:"";display:inline-block;width:6px;height:6px;margin:0 0 3px 8px;border:solid var(--gold);border-width:0 1.5px 1.5px 0;transform:rotate(45deg)}
+.cal-grid{display:grid;gap:4px}
+.cal-grid.d{grid-template-columns:repeat(7,1fr)}
+.cal-grid.m{grid-template-columns:repeat(3,1fr);gap:8px}
+.cal-grid.y{grid-template-columns:repeat(4,1fr);gap:6px}
+.cal-wd{text-align:center;font-size:12px;color:var(--gold);padding:2px 0 6px;opacity:.85}
+.cal-grid button{font:inherit;color:var(--ink);background:none;border:1px solid transparent;border-radius:9px;cursor:pointer;transition:background-color .15s,border-color .15s,color .15s}
+.cal-grid.d button{height:36px;font-size:14.5px;display:grid;place-content:center}
+.cal-grid.m button{padding:12px 0;font-size:15px}
+.cal-grid.y button{padding:6px 0;font-size:15px;line-height:1.2}
+.cal-grid.y button small{display:block;font-family:'Cinzel',serif;font-size:10.5px;color:var(--muted)}
+.cal-grid button:hover:not(:disabled){border-color:rgba(220,194,140,.45);background:rgba(220,194,140,.08);color:var(--gold2)}
+.cal-grid button:focus-visible{outline:none;border-color:var(--gold2);box-shadow:0 0 0 2px rgba(220,194,140,.25)}
+.cal-grid button:disabled{opacity:.22;cursor:default}
+.cal-grid button.now{border-color:rgba(220,194,140,.35)}
+.cal-grid button.sun{color:#e3a99b}
+.cal-grid button[aria-selected=true]{background:linear-gradient(180deg,#ecd6a2,#c4a066);color:#17130e;font-weight:600;border-color:#ecd6a2;box-shadow:0 0 14px rgba(236,214,162,.45)}
+.cal-grid button[aria-selected=true] small{color:#3a2f1e}
+.cal-foot{display:flex;justify-content:space-between;align-items:center;margin-top:10px;padding-top:8px;border-top:1px solid rgba(184,149,90,.18);font-size:12.5px;color:var(--muted)}
+.cal-foot button{font:inherit;font-size:13px;color:var(--gold2);background:none;border:none;cursor:pointer;padding:4px 6px;border-radius:6px}
+.cal-foot button:hover{background:rgba(220,194,140,.08)}
 #skyInfo{position:fixed;z-index:6;overflow-y:auto;padding:16px 18px 18px;line-height:1.75;font-size:15px;scrollbar-width:thin;scrollbar-color:var(--gold) transparent;touch-action:pan-y;opacity:0;visibility:hidden;display:flex;flex-direction:column;gap:12px}
 #skyInfo .sk-sec{border-top:1px solid rgba(184,149,90,.22);padding-top:10px}
 #skyInfo .sk-sec b{color:var(--gold2);font-weight:600}
@@ -484,12 +525,17 @@ function build(){
   <h3>ท้องฟ้าคืนที่คุณเกิด</h3>
   <div class="sf-rule" aria-hidden="true"></div>
   <p class="sub">ใส่วัน เวลา และเมืองที่เกิด เพื่อเปิดท้องฟ้าเหนือหัวคุณในวินาทีนั้น</p>
-  <div class="sf-row"><label>วันเกิด<input type="date" id="bDate" min="1900-01-01" required></label>
+  <div class="sf-row"><label>วันเกิด<button type="button" class="sf-field" id="bDateBtn" aria-haspopup="dialog" aria-expanded="false"><span class="v ph">เลือกวันเกิด</span><svg class="i" aria-hidden="true"><use href="#i-calendar"/></svg></button><input type="hidden" id="bDate"></label>
   <label>เวลาเกิด<input type="time" id="bTime"></label></div>
   <label class="chk"><input type="checkbox" id="bNoTime">ไม่ทราบเวลาเกิด (ใช้ 21:00 แทน)</label>
   <label>เมืองที่เกิด (เลือกเมืองที่ใกล้ที่สุด)<select id="bCity">${CITIES.map((c,i)=>`<option value="${i}">${c[0]}</option>`).join('')}</select></label>
   <button class="btn primary" id="bGo" type="button">เปิดท้องฟ้า<span aria-hidden="true"></span></button>
   <p class="err" id="bErr" aria-live="polite"></p>
+  <div class="sf-cal" id="bCal" role="dialog" aria-label="เลือกวันเกิด" hidden>
+    <div class="cal-head"><button type="button" class="cal-nav" data-step="-1" aria-label="ก่อนหน้า">‹</button><button type="button" class="cal-title" aria-live="polite"></button><button type="button" class="cal-nav" data-step="1" aria-label="ถัดไป">›</button></div>
+    <div class="cal-body"></div>
+    <div class="cal-foot"><span class="cal-tip"></span><button type="button" class="cal-close">ปิด</button></div>
+  </div>
 </section>
 <aside id="skyInfo" class="glass" aria-label="ดาวเกิดของคุณ" aria-live="polite"></aside>
 <div id="skyTip" aria-hidden="true"></div>
@@ -504,12 +550,12 @@ function build(){
   cv=$('#sky');cx=cv.getContext('2d');cache=document.createElement('canvas');cc=cache.getContext('2d');tip=$('#skyTip');
   gsap.set('#skyForm',{xPercent:-50,yPercent:-50});
   try{const v=JSON.parse(localStorage.getItem('arcana-birth')||'null');if(v){$('#bDate').value=v.d||'';$('#bTime').value=v.t||'';$('#bNoTime').checked=!!v.u;$('#bCity').value=v.c||0}}catch(e){}
-  $('#bDate').max=new Date().toISOString().slice(0,10);
+  calInit();
   /* unknown time: show the 21:00 stand-in in the greyed field, and give back what was typed when unticked */
   const noTime=()=>{const on=$('#bNoTime').checked,t=$('#bTime');if(on&&!t.disabled){typedT=t.value;t.value='21:00'}else if(!on&&t.disabled)t.value=typedT;t.disabled=on};
   $('#bNoTime').addEventListener('change',noTime);noTime();
   $('#bGo').addEventListener('click',()=>{if(S.state==='stars'&&!S.busy&&V.mode==='form')go(openSky)});
-  $('#skyForm').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();$('#bGo').click()}});
+  $('#skyForm').addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.target.closest('#bCal,#bDateBtn')){e.preventDefault();$('#bGo').click()}});
   cv.addEventListener('pointerdown',onDown);cv.addEventListener('pointermove',onMove);cv.addEventListener('pointerup',onUp);cv.addEventListener('pointercancel',()=>{V.drag=null;V.dirty=true});
   cv.addEventListener('pointerleave',()=>{V.hover=null;tip.style.opacity=0;zodHover(null);V.dirty=true});
   cv.addEventListener('wheel',onWheel,{passive:false});
@@ -859,6 +905,105 @@ async function toChart(){
 function syncTools(){syncBar();const u=$('#skUndo'),c=$('#skClear'),n=V.lines.length;if(u)u.disabled=!n;if(c)c.disabled=!n;const h=$('#skHint');if(h)h.textContent=n?`กลุ่มดาวของคุณมี ${n} เส้น`:'ลากจากดาวดวงหนึ่งไปอีกดวง (หรือแตะทีละดวง) เพื่อสร้างกลุ่มดาวของคุณเอง'}
 
 /* ---- the reading ---- */
+/* ---- birth-date picker: a themed calendar in Thai months and Buddhist-era years (the field keeps ISO yyyy-mm-dd) ---- */
+const TMON=['มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน','กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม'];
+const TMS=['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
+const TWD=['อา','จ','อ','พ','พฤ','ศ','ส'];
+const CAL={view:'d',y:2000,m:0,y0:1990,open:false};
+const Y_MIN=1900,iso=(y,m,d)=>`${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+function calToday(){const t=new Date(Date.now()+7*3600e3);return{y:t.getUTCFullYear(),m:t.getUTCMonth(),d:t.getUTCDate()}}
+function calSel(){const v=$('#bDate').value;if(!v)return null;const [y,m,d]=v.split('-').map(Number);return{y,m:m-1,d}}
+function calShow(){
+  const s=calSel(),el=$('#bDateBtn .v');
+  el.textContent=s?`${s.d} ${TMON[s.m]} ${s.y+543}`:'เลือกวันเกิด';el.classList.toggle('ph',!s);
+  $('#bDateBtn').setAttribute('aria-label',s?`วันเกิด ${el.textContent} (กดเพื่อเปลี่ยน)`:'เลือกวันเกิด');
+}
+function calRender(focusSel){
+  const T=calToday(),S=calSel(),body=$('#bCal .cal-body'),title=$('#bCal .cal-title'),[prev,next]=document.querySelectorAll('#bCal .cal-nav');
+  let h='';
+  if(CAL.view==='d'){
+    title.innerHTML=`${TMON[CAL.m]} ${CAL.y+543}<small>${CAL.y}</small>`;
+    const first=new Date(Date.UTC(CAL.y,CAL.m,1)).getUTCDay(),n=new Date(Date.UTC(CAL.y,CAL.m+1,0)).getUTCDate();
+    h=`<div class="cal-grid d" role="grid">${TWD.map(w=>`<span class="cal-wd" aria-hidden="true">${w}</span>`).join('')}`+'<span></span>'.repeat(first);
+    for(let d=1;d<=n;d++){
+      const fut=CAL.y>T.y||(CAL.y===T.y&&(CAL.m>T.m||(CAL.m===T.m&&d>T.d))),sel=S&&S.y===CAL.y&&S.m===CAL.m&&S.d===d,now=T.y===CAL.y&&T.m===CAL.m&&T.d===d;
+      h+=`<button type="button" data-d="${d}" class="${now?'now ':''}${(first+d-1)%7===0?'sun':''}" aria-selected="${!!sel}" aria-label="${d} ${TMON[CAL.m]} ${CAL.y+543}"${fut?' disabled':''}>${d}</button>`;
+    }
+    h+='</div>';
+    prev.disabled=CAL.y===Y_MIN&&CAL.m===0;next.disabled=CAL.y>T.y||(CAL.y===T.y&&CAL.m>=T.m);
+    $('#bCal .cal-tip').textContent='แตะชื่อเดือนเพื่อเลือกเดือนและปี';
+  }else if(CAL.view==='m'){
+    title.innerHTML=`พ.ศ. ${CAL.y+543}<small>${CAL.y}</small>`;
+    h=`<div class="cal-grid m">${TMS.map((t,i)=>`<button type="button" data-m="${i}" aria-selected="${!!(S&&S.y===CAL.y&&S.m===i)}" aria-label="${TMON[i]} ${CAL.y+543}"${CAL.y===T.y&&i>T.m?' disabled':''}>${t}</button>`).join('')}</div>`;
+    prev.disabled=CAL.y<=Y_MIN;next.disabled=CAL.y>=T.y;
+    $('#bCal .cal-tip').textContent='เลือกเดือน';
+  }else{
+    title.innerHTML=`${CAL.y0+543} – ${CAL.y0+543+19}`;
+    h='<div class="cal-grid y">';
+    for(let y=CAL.y0;y<CAL.y0+20;y++)h+=`<button type="button" data-y="${y}" aria-selected="${!!(S&&S.y===y)}" aria-label="พ.ศ. ${y+543}"${y>T.y||y<Y_MIN?' disabled':''}>${y+543}<small>${y}</small></button>`;
+    h+='</div>';
+    prev.disabled=CAL.y0<=Y_MIN;next.disabled=CAL.y0+20>T.y;
+    $('#bCal .cal-tip').textContent='เลือกปีเกิด (พ.ศ.)';
+  }
+  body.innerHTML=h;
+  calPlace();
+  if(focusSel){const b=body.querySelector('[aria-selected=true]:not(:disabled)')||body.querySelector('.now:not(:disabled)')||body.querySelector('button:not(:disabled)');b&&b.focus({preventScroll:true})}
+}
+function calOpen(){
+  if(CAL.open)return;CAL.open=true;const S=calSel(),T=calToday();
+  if(S){CAL.view='d';CAL.y=S.y;CAL.m=S.m}else{CAL.view='y';CAL.y=T.y-25;CAL.m=0}
+  CAL.y0=Math.max(Y_MIN,CAL.y-10);
+  const f=$('#bDateBtn'),cal=$('#bCal'),fr=f.getBoundingClientRect(),pr=$('#skyForm').getBoundingClientRect();
+  cal.hidden=false;f.setAttribute('aria-expanded','true');calRender(true);
+  calPlace();
+  gsap.fromTo(cal,{autoAlpha:0,y:-8,scale:.97,transformOrigin:'50% 0'},{autoAlpha:1,y:0,scale:1,duration:RM()?.01:.28,ease:EO});
+}
+/* below the field, lifted to stay on screen (it may then cover the field: the title says what is being picked) */
+function calPlace(){
+  if(!CAL.open)return;const cal=$('#bCal'),fr=$('#bDateBtn').getBoundingClientRect(),pr=$('#skyForm').getBoundingClientRect();
+  const top=Math.max(8,Math.min(fr.bottom+8,innerHeight-cal.offsetHeight-10));cal.style.top=(top-pr.top)+'px';
+}
+function calClose(back){
+  if(!CAL.open)return;CAL.open=false;const cal=$('#bCal');$('#bDateBtn').setAttribute('aria-expanded','false');
+  gsap.to(cal,{autoAlpha:0,y:-6,duration:RM()?.01:.18,ease:'power2.in',onComplete:()=>{cal.hidden=true}});
+  if(back)$('#bDateBtn').focus({preventScroll:true});
+}
+function calStep(k){
+  const T=calToday();
+  if(CAL.view==='d'){CAL.m+=k;if(CAL.m<0){CAL.m=11;CAL.y--}if(CAL.m>11){CAL.m=0;CAL.y++}}
+  else if(CAL.view==='m')CAL.y=Math.min(T.y,Math.max(Y_MIN,CAL.y+k));
+  else CAL.y0=Math.min(T.y-19,Math.max(Y_MIN,CAL.y0+20*k));
+}
+function calInit(){
+  calShow();
+  const cal=$('#bCal');
+  $('#bDateBtn').addEventListener('click',()=>CAL.open?calClose():calOpen());
+  cal.querySelector('.cal-close').addEventListener('click',()=>calClose(true));
+  cal.querySelector('.cal-title').addEventListener('click',()=>{
+    if(CAL.view==='d')CAL.view='m';else if(CAL.view==='m'){CAL.view='y';CAL.y0=Math.max(Y_MIN,Math.min(calToday().y-19,CAL.y-10))}else CAL.view='d';
+    calRender(true);
+  });
+  cal.querySelectorAll('.cal-nav').forEach(b=>b.addEventListener('click',()=>{calStep(+b.dataset.step);calRender()}));
+  cal.querySelector('.cal-body').addEventListener('click',e=>{
+    const b=e.target.closest('button');if(!b||b.disabled)return;
+    if(b.dataset.y){CAL.y=+b.dataset.y;CAL.view='m';calRender(true)}
+    else if(b.dataset.m){CAL.m=+b.dataset.m;CAL.view='d';calRender(true)}
+    else if(b.dataset.d){$('#bDate').value=iso(CAL.y,CAL.m,+b.dataset.d);$('#bErr').textContent='';calShow();calRender();setTimeout(()=>calClose(true),140)}
+  });
+  cal.addEventListener('keydown',e=>{
+    if(e.key==='Escape'){e.preventDefault();e.stopPropagation();calClose(true);return}
+    const b=document.activeElement;if(!b||!b.closest('.cal-body'))return;
+    const all=[...cal.querySelectorAll('.cal-body button')],i=all.indexOf(b),cols=CAL.view==='d'?7:CAL.view==='m'?3:4;
+    const mv={ArrowLeft:-1,ArrowRight:1,ArrowUp:-cols,ArrowDown:cols}[e.key];if(mv==null)return;e.preventDefault();
+    const j=i+mv;
+    if(j>=0&&j<all.length&&!all[j].disabled){all[j].focus();return}
+    if(CAL.view!=='d')return;                                     // days: walk across into the next or previous month
+    const d=+b.dataset.d+(mv),t=new Date(Date.UTC(CAL.y,CAL.m,d)),T=calToday();
+    if(t.getUTCFullYear()<Y_MIN||t>Date.UTC(T.y,T.m,T.d))return;
+    CAL.y=t.getUTCFullYear();CAL.m=t.getUTCMonth();calRender();cal.querySelector(`.cal-body [data-d="${t.getUTCDate()}"]`)?.focus();
+  });
+  document.addEventListener('pointerdown',e=>{if(CAL.open&&!e.target.closest('#bCal,#bDateBtn'))calClose()},true);
+}
 function birthFrom(){
   const d=$('#bDate').value,noT=$('#bNoTime').checked,t=noT?'21:00':($('#bTime').value||''),ci=+$('#bCity').value||0;
   if(!d)return{err:'ใส่วันเกิดก่อน'};
@@ -993,7 +1138,7 @@ async function enter(){
   tl.to('#bgimg',{autoAlpha:0,duration:1.2,ease:EO},0).fromTo('#bgObs',{autoAlpha:0,scale:1.08},{autoAlpha:.85,scale:1,duration:1.6,ease:EO},0).add(pIn('#skyForm',{y:50}),.1);
   if(!RM())tl.to(STAR,{boost:.5,duration:.4,ease:EO},0).to(STAR,{boost:0,duration:1.2,ease:EI},.4);
   await tlUntil(tl,.5);
-  setTimeout(()=>{if(V.mode==='form'&&S.lastPtr==='mouse')$('#bDate').focus({preventScroll:true})},400);
+  setTimeout(()=>{if(V.mode==='form'&&S.lastPtr==='mouse')$('#bDateBtn').focus({preventScroll:true})},400);
 }
 async function leave(){
   setState('gather');V.mode='anim';cv.classList.remove('draw');tip.style.opacity=0;
