@@ -168,13 +168,43 @@ Delta Lyr|เดลตาพิณ|18.908|36.899|4.3|Lyr
 Eps UMi|เอปไซลอนหมีเล็ก|16.766|82.037|4.2|UMi
 Zeta UMi|ซีตาหมีเล็ก|15.734|77.794|4.3|UMi
 Yildun|ยิลดุน|17.537|86.586|4.35|UMi
-Eta UMi|อีตาหมีเล็ก|16.292|75.755|4.95|UMi`;
+Eta UMi|อีตาหมีเล็ก|16.292|75.755|4.95|UMi
+Al Tarf|อัลทาร์ฟ|8.275|9.186|3.52|Cnc
+Asellus Australis|อะเซลลัสใต้|8.745|18.154|3.94|Cnc
+Asellus Borealis|อะเซลลัสเหนือ|8.722|21.469|4.66|Cnc
+Acubens|อาคูเบนส์|8.975|11.858|4.25|Cnc
+Iota Cnc|ไอโอตาปู|8.778|28.760|4|Cnc
+Alrescha|อัลเรชา|2.034|2.764|3.82|Psc
+Eta Psc|อีตาปลา|1.525|15.346|3.62|Psc
+Gamma Psc|แกมมาปลา|23.286|3.282|3.69|Psc
+Iota Psc|ไอโอตาปลา|23.666|5.626|4.13|Psc
+Theta Psc|ทีตาปลา|23.466|6.379|4.27|Psc
+Omega Psc|โอเมกาปลา|23.988|6.863|4.01|Psc
+Delta Psc|เดลตาปลา|.811|7.585|4.43|Psc
+Eps Psc|เอปไซลอนปลา|1.049|7.890|4.27|Psc
+Omicron Psc|โอไมครอนปลา|1.757|9.158|4.26|Psc
+Phi Psc|ฟายปลา|1.229|24.583|4.65|Psc
+Sadachbia|ซาดัคเบีย|22.361|-1.387|3.84|Aqr
+Zeta Aqr|ซีตาคนแบกหม้อน้ำ|22.481|-.020|3.65|Aqr
+Eta Aqr|อีตาคนแบกหม้อน้ำ|22.589|-.117|4.02|Aqr
+Lambda Aqr|แลมบ์ดาคนแบกหม้อน้ำ|22.877|-7.580|3.74|Aqr
+Skat|สแกต|22.911|-15.821|3.27|Aqr
+Albali|อัลบาลี|20.795|-9.496|3.77|Aqr
+Nashira|นาชิรา|21.668|-16.662|3.68|Cap
+Zeta Cap|ซีตาแพะทะเล|21.444|-22.411|3.74|Cap
+Theta Cap|ทีตาแพะทะเล|21.099|-17.233|4.07|Cap
+Omega Cap|โอเมกาแพะทะเล|20.864|-26.919|4.11|Cap
+Psi Cap|ไซแพะทะเล|20.768|-25.271|4.14|Cap
+Brachium|บราเคียม|15.068|-25.282|3.29|Lib
+Zubenelhakrabi|ซูเบนเอลฮาคราบี|15.592|-14.789|3.91|Lib
+41 Ari|41 แกะ|2.833|27.260|3.63|Ari
+Zeta Tau|ซีตาวัว|5.627|21.143|3|Tau`;
 const CONS={
   Ori:['นายพราน','Meissa-Betelgeuse Meissa-Bellatrix Betelgeuse-Bellatrix Betelgeuse-Alnitak Bellatrix-Mintaka Mintaka-Alnilam Alnilam-Alnitak Alnitak-Saiph Mintaka-Rigel'],
   CMa:['สุนัขใหญ่','Mirzam-Sirius Sirius-Wezen Wezen-Adhara Wezen-Aludra'],
   CMi:['สุนัขเล็ก','Procyon-Gomeisa'],
   Gem:['คนคู่','Castor-Mebsuta Mebsuta-Tejat Pollux-Wasat Wasat-Mekbuda Mekbuda-Alhena Castor-Pollux'],
-  Tau:['วัว','Elnath-Ain Ain-Delta Tau Delta Tau-Gamma Tau Gamma Tau-Aldebaran'],
+  Tau:['วัว','Elnath-Ain Ain-Delta Tau Delta Tau-Gamma Tau Gamma Tau-Aldebaran Aldebaran-Zeta Tau'],
   Aur:['สารถี','Capella-Menkalinan Menkalinan-Mahasim Mahasim-Elnath Elnath-Hassaleh Hassaleh-Eps Aur Eps Aur-Capella'],
   UMa:['หมีใหญ่ (กระบวยใหญ่)','Dubhe-Merak Merak-Phecda Phecda-Megrez Megrez-Dubhe Megrez-Alioth Alioth-Alkaid'],
   UMi:['หมีเล็ก','Polaris-Yildun Yildun-Eps UMi Eps UMi-Zeta UMi Zeta UMi-Kochab Kochab-Pherkad Pherkad-Eta UMi Eta UMi-Zeta UMi'],
@@ -193,10 +223,12 @@ const CONS={
   Peg:['ม้าบิน','Markab-Scheat Scheat-Alpheratz Alpheratz-Algenib Algenib-Markab Markab-Homam Homam-Enif'],
   And:['แอนดรอมิดา','Alpheratz-Delta And Delta And-Mirach Mirach-Almach'],
   Per:['เพอร์ซิอัส','Gamma Per-Mirfak Mirfak-Delta Per Delta Per-Eps Per Eps Per-Zeta Per Mirfak-Algol'],
-  Ari:['แกะ','Hamal-Sheratan Sheratan-Mesarthim'],
-  Lib:['คันชั่ง','Zubeneschamali-Zubenelgenubi'],
-  Aqr:['คนแบกหม้อน้ำ','Sadalsuud-Sadalmelik'],
-  Cap:['แพะทะเล','Algedi-Dabih Dabih-Deneb Algedi'],
+  Ari:['แกะ','Hamal-Sheratan Sheratan-Mesarthim 41 Ari-Hamal'],
+  Lib:['คันชั่ง','Zubeneschamali-Zubenelgenubi Zubenelgenubi-Brachium Zubeneschamali-Zubenelhakrabi Zubenelhakrabi-Brachium'],
+  Aqr:['คนแบกหม้อน้ำ','Albali-Sadalsuud Sadalsuud-Sadalmelik Sadalmelik-Sadachbia Sadachbia-Zeta Aqr Zeta Aqr-Eta Aqr Sadachbia-Lambda Aqr Lambda Aqr-Skat'],
+  Cap:['แพะทะเล','Algedi-Dabih Dabih-Psi Cap Psi Cap-Omega Cap Omega Cap-Zeta Cap Zeta Cap-Deneb Algedi Deneb Algedi-Nashira Nashira-Theta Cap Theta Cap-Dabih'],
+  Cnc:['ปู','Iota Cnc-Asellus Borealis Asellus Borealis-Asellus Australis Asellus Australis-Acubens Asellus Australis-Al Tarf'],
+  Psc:['ปลา','Phi Psc-Eta Psc Eta Psc-Omicron Psc Omicron Psc-Alrescha Alrescha-Eps Psc Eps Psc-Delta Psc Delta Psc-Omega Psc Omega Psc-Iota Psc Iota Psc-Theta Psc Theta Psc-Gamma Psc Gamma Psc-Iota Psc'],
   Oph:['คนแบกงู','Rasalhague-Sabik'],
   Hya:['งูไฮดรา',''],PsA:['ปลาใต้',''],Eri:['แม่น้ำอีริดานัส',''],Gru:['นกกระเรียน',''],CrB:['มงกุฎเหนือ','']
 };
@@ -278,9 +310,24 @@ const MILKY=[];for(let i=0;i<520;i++){const p=gal2eq(rnd()*TAU,gauss()*6*D2R);MI
 
 /* zodiac figures (painted line art, assets/zodiac/*.webp): centre (RA h, Dec °) and height on the sky (°),
    in the order of SIGNS, so the sun's sign index is the figure's index. Each is drawn upright to celestial north. */
-const ZOD=[['aries',2.6,20,22,'Ari'],['taurus',4.7,19,34,'Tau'],['gemini',7.1,23,28,'Gem'],['cancer',8.6,20,22,''],['leo',10.6,16,34,'Leo'],['virgo',13.2,-3,40,'Vir'],
-  ['libra',15.1,-15,24,'Lib'],['scorpius',16.8,-32,34,'Sco'],['sagittarius',18.9,-28,32,'Sgr'],['capricornus',21,-18,26,'Cap'],['aquarius',22.3,-10,34,'Aqr'],['pisces',.9,12,40,'']]
-  .map(([n,ra,de,h,c],i)=>({n,ra:ra*15,de,h,c,i,a:0,img:null,flip:['taurus','scorpius','capricornus'].includes(n)}));   // flip: the art faces the other way from the sky (east is left)
+/* Each figure is pinned to its constellation: anchors pair a point on the painting (fractions of its width and
+   height) with a star. Every frame the figure gets the similarity transform (scale, turn, shift) that best lays
+   those points on the projected stars, mirrored if that fits better, so it sits on the real stars in the chart
+   and in the dome alike. Order follows SIGNS. */
+const ZOD=[
+  ['aries','Ari',[[.72,.2,'Hamal'],[.88,.26,'Sheratan'],[.9,.32,'Mesarthim'],[.3,.42,'41 Ari']]],
+  ['taurus','Tau',[[.83,.32,'Aldebaran'],[.86,.4,'Gamma Tau'],[.93,.05,'Elnath'],[.42,.2,'Alcyone']]],
+  ['gemini','Gem',[[.4,.07,'Castor'],[.62,.07,'Pollux'],[.3,.96,'Tejat'],[.68,.96,'Alhena'],[.62,.5,'Wasat'],[.38,.5,'Mebsuta']]],
+  ['cancer','Cnc',[[.5,.52,'Asellus Australis'],[.5,.33,'Asellus Borealis'],[.5,.08,'Iota Cnc'],[.25,.9,'Acubens'],[.75,.9,'Al Tarf']]],
+  ['leo','Leo',[[.72,.6,'Regulus'],[.66,.3,'Algieba'],[.9,.22,'Eps Leo'],[.33,.48,'Zosma'],[.32,.68,'Chertan'],[.12,.52,'Denebola']]],
+  ['virgo','Vir',[[.55,.12,'Beta Vir'],[.62,.45,'Spica'],[.35,.35,'Vindemiatrix'],[.45,.5,'Porrima'],[.5,.78,'Zeta Vir']]],
+  ['libra','Lib',[[.5,.07,'Zubeneschamali'],[.82,.73,'Zubenelgenubi'],[.18,.73,'Zubenelhakrabi'],[.5,.97,'Brachium']]],
+  ['scorpius','Sco',[[.55,.62,'Antares'],[.32,.82,'Graffias'],[.42,.74,'Dschubba'],[.72,.42,'Eps Sco'],[.78,.28,'Zeta Sco'],[.62,.06,'Sargas'],[.42,.08,'Iota Sco'],[.42,.28,'Shaula']]],
+  ['sagittarius','Sgr',[[.95,.21,'Alnasl'],[.66,.04,'Kaus Borealis'],[.75,.51,'Kaus Australis'],[.8,.28,'Kaus Media'],[.45,.3,'Nunki'],[.35,.35,'Tau Sgr'],[.45,.55,'Ascella'],[.55,.3,'Phi Sgr']]],
+  ['capricornus','Cap',[[.3,.1,'Algedi'],[.15,.28,'Dabih'],[.95,.33,'Deneb Algedi'],[.85,.45,'Nashira'],[.1,.75,'Omega Cap'],[.2,.6,'Psi Cap'],[.55,.72,'Zeta Cap'],[.55,.42,'Theta Cap']]],
+  ['aquarius','Aqr',[[.62,.28,'Sadalmelik'],[.32,.22,'Sadalsuud'],[.55,.42,'Zeta Aqr'],[.7,.65,'Lambda Aqr'],[.55,.85,'Skat'],[.08,.5,'Albali']]],
+  ['pisces','Psc',[[.5,.43,'Alrescha'],[.45,.2,'Eta Psc'],[.75,.2,'Phi Psc'],[.5,.78,'Iota Psc'],[.2,.68,'Gamma Psc']]]
+].map(([n,c,anc],i)=>({n,c,anc,i,a:0,img:null,refl:null}));
 const ZTH=['แกะ','วัว','คนคู่','ปู','สิงโต','หญิงสาว','คันชั่ง','แมงป่อง','คนยิงธนู','แพะทะเล','คนแบกหม้อน้ำ','ปลา'];
 const ZBYC={};ZOD.forEach(z=>{if(z.c)ZBYC[z.c]=z});
 let zodLoaded=false;
@@ -297,18 +344,30 @@ function zodHover(z){
   if(was)zodFade(was,zodRest(was));if(z)zodFade(z,Z.show?.62:.5);
 }
 function zodAll(){ZOD.forEach(z=>zodFade(z,z===Z.hover?.62:zodRest(z)))}
-/* where a figure sits on screen: centre, and the screen direction of celestial north scaled to its height */
+/* least-squares similarity from painting points to screen points (complex form q = a·p + b, p mirrored
+   when refl); returns the canvas transform, the residual and where the figure's centre lands */
+function zodSolve(pts,refl,W,H){
+  let px=0,py=0,qx=0,qy=0;const n=pts.length;pts.forEach(t=>{px+=t[0];py+=t[1];qx+=t[2];qy+=t[3]});px/=n;py/=n;qx/=n;qy/=n;
+  let nr=0,ni=0,dd=0;
+  for(const [x,y,X,Y] of pts){const ux=x-px,uy=(y-py)*(refl?-1:1),vx=X-qx,vy=Y-qy;nr+=vx*ux+vy*uy;ni+=vy*ux-vx*uy;dd+=ux*ux+uy*uy}
+  const ar=nr/dd,ai=ni/dd,s=refl?-1:1;
+  let err=0;for(const [x,y,X,Y] of pts){const ux=x-px,uy=(y-py)*s;err+=(ar*ux-ai*uy+qx-X)**2+(ai*ux+ar*uy+qy-Y)**2}
+  // canvas transform: x' = ar·x − s·ai·y + e, y' = ai·x + s·ar·y + f
+  const m=[ar,ai,-s*ai,s*ar,qx-ar*px+s*ai*py,qy-ai*px-s*ar*py];
+  return{m,err,k:Math.hypot(ar,ai),cx:m[0]*W/2+m[2]*H/2+m[4],cy:m[1]*W/2+m[3]*H/2+m[5]};
+}
 function zodPlace(z,P){
-  const c=P(z.ra,z.de),n=P(z.ra,Math.min(89.5,z.de+z.h/2));
-  if(c.z!==undefined&&(c.z<.15||n.z<.05))return null;
-  const dx=n.x-c.x,dy=n.y-c.y,half=Math.hypot(dx,dy);if(!(half>4)||half>4000)return null;
-  return{x:c.x,y:c.y,alt:c.alt,h:half*2,rot:Math.atan2(dx,-dy)};
+  if(!z.img)return null;const W=z.img.width,H=z.img.height,pts=[];let alt=0;
+  for(const [u,v,n] of z.anc){const s=BY[n];if(!s)continue;const q=P(s.ra,s.de);if(q.z!==undefined&&q.z<.05)return null;if(!(Math.abs(q.x)<1e5))return null;alt+=q.alt;pts.push([u*W,v*H,q.x,q.y])}
+  if(pts.length<2)return null;
+  if(z.refl===null){const a=zodSolve(pts,false,W,H),b=zodSolve(pts,true,W,H);z.refl=b.err<a.err}   // decided once
+  const f=zodSolve(pts,z.refl,W,H),h=f.k*H;if(!(h>6)||h>5000)return null;
+  return{x:f.cx,y:f.cy,h,alt:alt/pts.length,m:f.m};
 }
 function paintZodiac(x,P,alphaK=1){
   for(const z of ZOD){
-    if(!z.img||z.a<.01)continue;const q=zodPlace(z,P);if(!q||q.alt<-12)continue;z.q=q;
-    const w=q.h*z.img.width/z.img.height;
-    x.save();x.globalAlpha=z.a*alphaK;x.translate(q.x,q.y);x.rotate(q.rot);if(z.flip)x.scale(-1,1);x.drawImage(z.img,-w/2,-q.h/2,w,q.h);x.restore();
+    if(!z.img||z.a<.01)continue;const q=zodPlace(z,P);if(!q||q.alt<-12)continue;
+    x.save();x.globalAlpha=z.a*alphaK;x.transform(...q.m);x.drawImage(z.img,0,0);x.restore();
   }
 }
 /* the figure under the pointer: a star of its constellation, or inside its outline circle */
