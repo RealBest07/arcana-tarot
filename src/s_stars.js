@@ -315,25 +315,25 @@ const MILKY=[];for(let i=0;i<520;i++){const p=gal2eq(rnd()*TAU,gauss()*6*D2R);MI
    those points on the projected stars, mirrored if that fits better, so it sits on the real stars in the chart
    and in the dome alike. Order follows SIGNS. */
 const ZOD=[
-  ['aries','Ari',[[.72,.2,'Hamal'],[.88,.26,'Sheratan'],[.9,.32,'Mesarthim'],[.3,.42,'41 Ari']]],
-  ['taurus','Tau',[[.83,.32,'Aldebaran'],[.86,.4,'Gamma Tau'],[.93,.05,'Elnath'],[.42,.2,'Alcyone']]],
-  ['gemini','Gem',[[.4,.07,'Castor'],[.62,.07,'Pollux'],[.3,.96,'Tejat'],[.68,.96,'Alhena'],[.62,.5,'Wasat'],[.38,.5,'Mebsuta']]],
-  ['cancer','Cnc',[[.5,.52,'Asellus Australis'],[.5,.33,'Asellus Borealis'],[.5,.08,'Iota Cnc'],[.25,.9,'Acubens'],[.75,.9,'Al Tarf']]],
-  ['leo','Leo',[[.72,.6,'Regulus'],[.66,.3,'Algieba'],[.9,.22,'Eps Leo'],[.33,.48,'Zosma'],[.32,.68,'Chertan'],[.12,.52,'Denebola']]],
-  ['virgo','Vir',[[.55,.12,'Beta Vir'],[.62,.45,'Spica'],[.35,.35,'Vindemiatrix'],[.45,.5,'Porrima'],[.5,.78,'Zeta Vir']]],
-  ['libra','Lib',[[.5,.07,'Zubeneschamali'],[.82,.73,'Zubenelgenubi'],[.18,.73,'Zubenelhakrabi'],[.5,.97,'Brachium']]],
-  ['scorpius','Sco',[[.55,.62,'Antares'],[.32,.82,'Graffias'],[.42,.74,'Dschubba'],[.72,.42,'Eps Sco'],[.78,.28,'Zeta Sco'],[.62,.06,'Sargas'],[.42,.08,'Iota Sco'],[.42,.28,'Shaula']]],
-  ['sagittarius','Sgr',[[.95,.21,'Alnasl'],[.66,.04,'Kaus Borealis'],[.75,.51,'Kaus Australis'],[.8,.28,'Kaus Media'],[.45,.3,'Nunki'],[.35,.35,'Tau Sgr'],[.45,.55,'Ascella'],[.55,.3,'Phi Sgr']]],
-  ['capricornus','Cap',[[.3,.1,'Algedi'],[.15,.28,'Dabih'],[.95,.33,'Deneb Algedi'],[.85,.45,'Nashira'],[.1,.75,'Omega Cap'],[.2,.6,'Psi Cap'],[.55,.72,'Zeta Cap'],[.55,.42,'Theta Cap']]],
-  ['aquarius','Aqr',[[.38,.18,'Sadalmelik'],[.72,.28,'Sadalsuud'],[.5,.38,'Zeta Aqr'],[.44,.36,'Sadachbia'],[.6,.68,'Lambda Aqr'],[.72,.86,'Skat']]],
-  ['pisces','Psc',[[.5,.43,'Alrescha'],[.45,.2,'Eta Psc'],[.75,.2,'Phi Psc'],[.5,.78,'Iota Psc'],[.2,.68,'Gamma Psc']]]
+  ['aries','Ari',[[.7202,.4066,'Hamal'],[.9137,.6404,'Sheratan'],[.9341,.7760,'Mesarthim'],[.0898,.0350,'41 Ari']]],
+  ['taurus','Tau',[[.4779,.5796,'Aldebaran'],[.1301,.0511,'Elnath'],[.8218,.2392,'Alcyone'],[.5306,.4673,'Ain'],[.5981,.6144,'Gamma Tau'],[.5732,.5348,'Delta Tau'],[.0282,.3597,'Zeta Tau']]],
+  ['gemini','Gem',[[.1244,.2934,'Pollux'],[.2392,.0891,'Castor'],[.7955,.9529,'Alhena'],[.9342,.6055,'Tejat'],[.9265,.4610,'Mebsuta'],[.3599,.6455,'Wasat'],[.5206,.7268,'Mekbuda']]],
+  ['cancer','Cnc',[[.7824,.9710,'Al Tarf'],[.4800,.5421,'Asellus Australis'],[.4944,.3836,'Asellus Borealis'],[.3326,.8424,'Acubens'],[.4628,.0290,'Iota Cnc']]],
+  ['leo','Leo',[[.7842,.8281,'Regulus'],[.6995,.4408,'Algieba'],[.0765,.6614,'Denebola'],[.3404,.3932,'Zosma'],[.9208,.2268,'Eps Leo'],[.3308,.6471,'Chertan'],[.7190,.2639,'Adhafera'],[.7868,.5890,'Eta Leo'],[.8710,.1208,'Rasalas']]],
+  ['virgo','Vir',[[.1944,.8592,'Spica'],[.5083,.4947,'Porrima'],[.3616,.0375,'Vindemiatrix'],[.1248,.4640,'Zeta Vir'],[.4084,.3179,'Delta Vir'],[.8824,.3753,'Beta Vir'],[.6650,.4664,'Eta Vir']]],
+  ['libra','Lib',[[.4411,.1470,'Zubeneschamali'],[.8428,.4848,'Zubenelgenubi'],[.6347,.9476,'Brachium'],[.1572,.4225,'Zubenelhakrabi']]],
+  ['scorpius','Sco',[[.5700,.3217,'Antares'],[.1152,.7297,'Shaula'],[.1126,.9538,'Sargas'],[.8126,.1932,'Dschubba'],[.4105,.6088,'Eps Sco'],[.0623,.8098,'Kappa Sco'],[.7822,.0793,'Graffias'],[.1352,.7346,'Lesath'],[.5181,.3863,'Tau Sco'],[.8089,.3285,'Pi Sco'],[.6355,.2937,'Sigma Sco'],[.3984,.7471,'Mu Sco'],[.0330,.8563,'Iota Sco'],[.2719,.9455,'Eta Sco'],[.3816,.9081,'Zeta Sco']]],
+  ['sagittarius','Sgr',[[.7392,.8775,'Kaus Australis'],[.3552,.1808,'Nunki'],[.2705,.4954,'Ascella'],[.7870,.4861,'Kaus Media'],[.7064,.1025,'Kaus Borealis'],[.9740,.5534,'Alnasl'],[.4790,.2363,'Phi Sgr'],[.2091,.3094,'Tau Sgr']]],
+  ['capricornus','Cap',[[.0434,.3776,'Deneb Algedi'],[.9083,.3029,'Dabih'],[.9452,.1840,'Algedi'],[.1156,.4016,'Nashira'],[.2590,.6993,'Zeta Cap'],[.4561,.4203,'Theta Cap'],[.5890,.9340,'Omega Cap'],[.6441,.8476,'Psi Cap']]],
+  ['aquarius','Aqr',[[.6449,.3826,'Sadalsuud'],[.4303,.2428,'Sadalmelik'],[.3309,.2708,'Sadachbia'],[.2856,.2349,'Zeta Aqr'],[.2447,.2374,'Eta Aqr'],[.1374,.4359,'Lambda Aqr'],[.1279,.6584,'Skat'],[.9357,.5009,'Albali']]],
+  ['pisces','Psc',[[.0469,.8868,'Alrescha'],[.2337,.5029,'Eta Psc'],[.9617,.8699,'Gamma Psc'],[.8258,.8001,'Iota Psc'],[.8937,.7735,'Theta Psc'],[.7181,.7656,'Omega Psc'],[.4565,.7470,'Delta Psc'],[.3814,.7370,'Eps Psc'],[.1514,.6889,'Omicron Psc'],[.3324,.2193,'Phi Psc']]]
 ].map(([n,c,anc],i)=>({n,c,anc,i,a:0,img:null,refl:null}));
 const ZTH=['แกะ','วัว','คนคู่','ปู','สิงโต','หญิงสาว','คันชั่ง','แมงป่อง','คนยิงธนู','แพะทะเล','คนแบกหม้อน้ำ','ปลา'];
 const ZBYC={};ZOD.forEach(z=>{if(z.c)ZBYC[z.c]=z});
 let zodLoaded=false;
 function loadZodiac(){
   if(zodLoaded||location.protocol==='file:')return;zodLoaded=true;
-  ZOD.forEach(z=>{const im=new Image();im.onload=()=>{z.img=im;V.dirty=true};im.src=`assets/zodiac/${z.n}.webp`});
+  ZOD.forEach(z=>{const im=new Image();im.onload=()=>{z.img=im;V.dirty=true};im.src=`assets/zodiac/${z.n}.webp?v=2`});
 }
 /* resting opacity: the birth sign a little stronger, the rest faint, all hidden when switched off */
 function zodRest(z){return !Z.show?0:(R0&&z.i===R0.signIdx?.34:.15)}

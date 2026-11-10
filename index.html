@@ -2039,7 +2039,7 @@ async function leaveIntro(){
 }
 
 /* ---- the rite chooser: two arched doors rise out of the dark; the chosen one swallows the view ---- */
-const RITE_V='1794324976';                         // build stamp, so a new deploy never runs a cached rite script
+const RITE_V='1794334704';                         // build stamp, so a new deploy never runs a cached rite script
 function loadRite(name){
   if(name==='stars'&&window.StarRite)return Promise.resolve();
   return new Promise((res,rej)=>{const sc=document.createElement('script');sc.src=`${name}.js?v=${RITE_V}`;sc.onload=res;sc.onerror=()=>rej(new Error('load '+name));document.head.appendChild(sc)});
