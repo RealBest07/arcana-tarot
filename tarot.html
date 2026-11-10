@@ -1840,7 +1840,7 @@ function vortexTL(cards,{target,dur=2.2,gap=.008,spin=1,lift=0}){
     const turn=(1.15+Math.random()*.55)*Math.PI*spin,o={t:0},swirl=rand(140,240)*spin,wob=rand(-35,35),wy=rand(-30,30);
     tl.set(c.el,{autoAlpha:1},i*gap).to(o,{t:1,duration:dur,ease:'back.out(1.05)',onUpdate(){
       const e=o.t,em=Math.min(e,1),s=Math.sin(Math.PI*em),r=r0*(1-e),a=a0+turn*e;
-      gsap.set(c.el,{x:D.x+Math.cos(a)*r+(tp.x-D.x)*e,y:D.y+Math.sin(a)*r+(tp.y-D.y)*e,z:fr.z+(tp.z-fr.z)*e+lift*s,
+      gsap.set(c.el,{x:D.x+Math.cos(a)*r+(tp.x-D.x)*e,y:D.y+Math.sin(a)*r+(tp.y-D.y)*e,z:Math.max(fr.z+(tp.z-fr.z)*e+lift*s,S.L.ch*.6*s),
         rotation:fr.rotation+(tp.rotation-fr.rotation)*e+swirl*s*.6,rotationX:fr.rotationX+(tp.rotationX-fr.rotationX)*em+wob*s,
         rotationY:fr.rotationY+(tp.rotationY-fr.rotationY)*em+wy*s,scale:fr.scale+(tp.scale-fr.scale)*em});
     }},i*gap);
@@ -1862,6 +1862,7 @@ function camFly(c,fr,tp,{dur,ease='power2.inOut',add,fade=0}){
   return gsap.to(o,{t:1,duration:dur,ease,onStart(){gsap.set(c.el,{autoAlpha:fade?0:1});fade&&gsap.to(c.el,{autoAlpha:1,duration:fade,ease:'none'})},onUpdate(){
     const t=o.t,k=camNow(),face=-k.a/D2R,s=Math.sin(Math.PI*Math.min(Math.max(t,0),1)),q=tp?toCam(tp,k):fr,d=add?add(t,s):{};
     const w=toWorld({x:fr.x+(q.x-fr.x)*t+(d.x||0),y:fr.y+(q.y-fr.y)*t+(d.y||0),z:fr.z+(q.z-fr.z)*t+(d.z||0)},k);
+    w.z=Math.max(w.z,S.L.ch*.6*s);                       // never dip under the altar cloth (z -8), which would hide the card
     const T=tp||{rotation:R0,rotationX:face+RX,rotationY:RY,scale:sc};
     gsap.set(c.el,{...w,rotation:R0+(T.rotation-R0)*t+(d.rotation||0),rotationX:face+RX+(T.rotationX-face-RX)*t+(d.rotationX||0),
       rotationY:RY+(T.rotationY-RY)*t+(d.rotationY||0),scale:sc+(T.scale-sc)*t});
@@ -1942,7 +1943,7 @@ const GATHERS={
       tl.set(c.el,{autoAlpha:1},i*.004).to(o,{t:1,duration:dur,ease:'none',onUpdate(){
         const t=o.t,k=camNow(),ctr=toCam({x:D.x,y:D.y,z:0},k),e=gsap.parseEase('power2.out')(Math.min(t/.4,1)),
           r=R0+(Rr-R0)*e,th=th0+g.dir*TAU*.95*t,ex=r*Math.cos(th),ey=r*.46*Math.sin(th);
-        const p={x:ctr.x+ex*g.c-ey*g.s,y:ctr.y+ex*g.s+ey*g.c,z:ctr.z+r*.45*Math.sin(th)},w=toWorld(p,k);
+        const p={x:ctr.x+ex*g.c-ey*g.s,y:ctr.y+ex*g.s+ey*g.c,z:ctr.z+r*.45*Math.sin(th)},w=toWorld(p,k);w.z=Math.max(w.z,L.ch*.6);
         const tx=-Math.sin(th),ty=.46*Math.cos(th),ang=Math.atan2(tx*g.s+ty*g.c,tx*g.c-ty*g.s)/D2R;      // along the ring
         const m=gsap.parseEase('power3.inOut')(Math.max(0,(t-.55)/.45)),face=-k.a/D2R;
         gsap.set(c.el,{x:w.x+(tp.x-w.x)*m,y:w.y+(tp.y-w.y)*m,z:w.z+(tp.z-w.z)*m,rotation:(ang+90)*(1-m)+tp.rotation*m,
