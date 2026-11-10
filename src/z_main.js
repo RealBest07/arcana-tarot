@@ -543,6 +543,111 @@ function vortexTL(cards,{target,dur=2.2,gap=.008,spin=1,lift=0}){
   });
   return tl;
 }
+/* ---- camera-space flights: paths are planned in the camera's own frame (x right, y down, z toward the
+   viewer) and mapped back into the world every frame with the camera's live tilt and dolly, so a card can
+   come from a screen edge or from right in front of the viewer while the camera is still moving ---- */
+const camNow=()=>({a:(+gsap.getProperty('#cam','rotationX')||0)*D2R,z:+gsap.getProperty('#cam','z')||0});
+const toCam=(p,k)=>{const c=Math.cos(k.a),s=Math.sin(k.a);return{x:p.x,y:p.y*c-p.z*s,z:p.y*s+p.z*c+k.z}};
+const toWorld=(p,k)=>{const c=Math.cos(k.a),s=Math.sin(k.a),Z=p.z-k.z;return{x:p.x,y:p.y*c+Z*s,z:-p.y*s+Z*c}};
+// a point that shows at screen offset (sx,sy) from the viewport centre, at camera depth z
+function atScreen(sx,sy,z){const oy=-.04*S.L.H,f=(PERSP-z)/PERSP;return{x:sx*f,y:oy+(sy-oy)*f,z}}
+/* fr: camera-space start {x,y,z} plus rotation/rotationX/rotationY (rotationX relative to facing the
+   viewer). tp: world target pose, or null to hold at fr. add(t,s) returns camera-space and rotation offsets. */
+function camFly(c,fr,tp,{dur,ease='power2.inOut',add,fade=0}){
+  const o={t:0},R0=fr.rotation||0,RX=fr.rotationX||0,RY=fr.rotationY||0,sc=fr.scale??(tp?tp.scale:1);
+  return gsap.to(o,{t:1,duration:dur,ease,onStart(){gsap.set(c.el,{autoAlpha:fade?0:1});fade&&gsap.to(c.el,{autoAlpha:1,duration:fade,ease:'none'})},onUpdate(){
+    const t=o.t,k=camNow(),face=-k.a/D2R,s=Math.sin(Math.PI*Math.min(Math.max(t,0),1)),q=tp?toCam(tp,k):fr,d=add?add(t,s):{};
+    const w=toWorld({x:fr.x+(q.x-fr.x)*t+(d.x||0),y:fr.y+(q.y-fr.y)*t+(d.y||0),z:fr.z+(q.z-fr.z)*t+(d.z||0)},k);
+    const T=tp||{rotation:R0,rotationX:face+RX,rotationY:RY,scale:sc};
+    gsap.set(c.el,{...w,rotation:R0+(T.rotation-R0)*t+(d.rotation||0),rotationX:face+RX+(T.rotationX-face-RX)*t+(d.rotationX||0),
+      rotationY:RY+(T.rotationY-RY)*t+(d.rotationY||0),scale:sc+(T.scale-sc)*t});
+  }});
+}
+/* Opening gathers: one is picked at random each time the deck forms after "เริ่ม". Every kind lands the
+   cards bottom-first (arrival time rises with the stack index), so no card sinks through those above it. */
+const GATHERS={
+  // the original tornado around the deck
+  vortex:(cards,target)=>vortexTL(cards,{target,dur:2.3}),
+  // from every edge of the screen, and a few straight out from behind the viewer into the deck
+  storm(cards,target){
+    const tl=gsap.timeline(),L=S.L,n=cards.length,front=new Set(fisherYates([...Array(n).keys()]).slice(0,L.wide?11:7));
+    let fk=0;
+    cards.forEach((c,i)=>{
+      const tp=target(c,i),T=1.4+i*.016;
+      if(front.has(i)){
+        const dur=1.15,fr={...atScreen(rand(-.16,.16)*L.W,rand(-.12,.12)*L.H,rand(1400,1480)),rotation:rand(-30,30),rotationX:rand(-14,14),rotationY:rand(-14,14)};
+        const at=Math.max(.05,T-dur);
+        if(fk++%3===0)tl.add(()=>Sound.whoosh(),at);
+        tl.add(camFly(c,fr,tp,{dur,ease:'power3.out',fade:.12,add:(t,s)=>({rotation:s*40})}),at);
+      }else{
+        const th=rand(0,TAU),m=L.ch*1.1,cx=Math.cos(th),cy=Math.sin(th),k=1/Math.max(Math.abs(cx)/(L.W/2+m),Math.abs(cy)/(L.H/2+m));
+        const dur=rand(1,1.35),fr={...atScreen(cx*k,cy*k,rand(-350,450)),rotation:rand(-180,180),rotationX:rand(-50,50),rotationY:rand(-50,50)};
+        const bend=rand(-.35,.35)*Math.min(L.W,L.H),nx=-cy,ny=cx;
+        tl.add(camFly(c,fr,tp,{dur,ease:'power2.inOut',add:(t,s)=>({x:nx*bend*s,y:ny*bend*s,z:120*s,rotationX:-30*s})}),Math.max(0,T-dur));
+      }
+    });
+    return tl;
+  },
+  // fluttering down from above the screen like falling leaves
+  rain(cards,target){
+    const tl=gsap.timeline(),L=S.L;
+    cards.forEach((c,i)=>{
+      const tp=target(c,i),dur=rand(1.15,1.5),ph=rand(0,TAU),amp=rand(40,110),T=1.55+i*.016;
+      const fr={...atScreen(rand(-.55,.55)*L.W,-L.H/2-L.ch*rand(.8,2.6),rand(-250,550)),rotation:rand(-60,60),rotationX:rand(-35,35),rotationY:rand(-70,70)};
+      tl.add(camFly(c,fr,tp,{dur,ease:'sine.inOut',add:(t,s)=>{const w=Math.sin(t*TAU*1.4+ph)*(1-t);
+        return{x:amp*w+fr.x*(t-t*t*t),rotation:18*w,rotationY:40*w,rotationX:-25*s}}}),Math.max(0,T-dur));   // keep falling wide, slide in late
+    });
+    return tl;
+  },
+  // one long ribbon of cards streams in from far away and coils down into the deck
+  stream(cards,target){
+    const tl=gsap.timeline(),L=S.L,dur=1.3,gap=.021,side=Math.random()<.5?-1:1,A=Math.min(L.W*.32,420);
+    const fr0=atScreen(-side*L.W*.3,-L.H*.15,-2600);
+    cards.forEach((c,i)=>{
+      const tp=target(c,i),fr={...fr0,rotation:side*180,rotationX:-30,rotationY:0};
+      tl.add(camFly(c,fr,tp,{dur,ease:'sine.inOut',add:(t,s)=>{const f=Math.pow(1-t,.6),w=Math.sin(t*TAU*1.05);
+        return{x:side*A*1.3*w*f,y:-L.H*.12*Math.sin(t*Math.PI*1.6)*f,z:950*s*s,rotationY:side*40*w*f}}}),.05+i*gap);
+    });
+    return tl;
+  },
+  // the deck first hangs as a wall of cards facing the viewer, then folds in from the outside to the centre
+  wall(cards,target){
+    const tl=gsap.timeline(),L=S.L,n=cards.length,cw=L.cw,ch=L.ch;
+    const cols=Math.max(4,Math.round(Math.sqrt(n*(L.W/L.H)*(ch/cw)*.95))),rows=Math.ceil(n/cols);
+    const cell=Math.min(L.W*.96/cols,L.H*.9/rows*7/12)/1.08,f=cell/cw,z=PERSP*(1-1/f);
+    const cells=[];for(let r=0;r<rows;r++)for(let q=0;q<cols;q++)cells.push({sx:(q-(cols-1)/2)*cell*1.08,sy:(r-(rows-1)/2)*cell*12/7*1.08});
+    const far=Math.hypot(L.W,L.H)/2;
+    cells.sort((a,b)=>Math.hypot(b.sx,b.sy)-Math.hypot(a.sx,a.sy));    // outer cells take the bottom of the deck
+    const fly=1.05,hold=.85;
+    cards.forEach((c,i)=>{
+      const g=cells[i],d=Math.hypot(g.sx,g.sy)/far,fr={...atScreen(g.sx,g.sy,z),rotation:0,rotationX:0,rotationY:0},tp=target(c,i);
+      const appear=.05+(1-d)*.45,go=hold+.15+i*.013;
+      const hd=go-appear;                                                // flip in (edge-on → facing), then hang
+      tl.add(camFly(c,fr,null,{dur:hd,ease:'none',fade:.25,add:t=>{const u=Math.min(1,t*hd/.55);return{rotationY:-90*Math.pow(1-u,3)}}}),appear);
+      tl.add(camFly(c,fr,tp,{dur:fly,ease:'power3.inOut',add:(t,s)=>({z:220*s,rotation:(i%2?1:-1)*90*s,rotationX:-40*s})}),go);
+    });
+    return tl;
+  },
+  // three tilted orbits, like rings round a planet, that tighten and drop into the deck
+  orbit(cards,target){
+    const tl=gsap.timeline(),L=S.L,D=L.deckSetup,R0=Math.hypot(L.W,L.H)*.8,Rr=Math.min(L.W*.4,L.H*.4),dur=2.5;
+    // rings are laid out on screen (camera space) round the deck, each a flat ellipse turned 0/60/-60°
+    const rings=[0,60,-60].map(a=>({c:Math.cos(a*D2R),s:Math.sin(a*D2R),dir:a<0?-1:1}));
+    cards.forEach((c,i)=>{
+      const g=rings[i%3],tp=target(c,i),th0=(Math.floor(i/3)/26)*TAU+(i%3)*.7,o={t:0};
+      tl.set(c.el,{autoAlpha:1},i*.004).to(o,{t:1,duration:dur,ease:'none',onUpdate(){
+        const t=o.t,k=camNow(),ctr=toCam({x:D.x,y:D.y,z:0},k),e=gsap.parseEase('power2.out')(Math.min(t/.4,1)),
+          r=R0+(Rr-R0)*e,th=th0+g.dir*TAU*.95*t,ex=r*Math.cos(th),ey=r*.46*Math.sin(th);
+        const p={x:ctr.x+ex*g.c-ey*g.s,y:ctr.y+ex*g.s+ey*g.c,z:ctr.z+r*.45*Math.sin(th)},w=toWorld(p,k);
+        const tx=-Math.sin(th),ty=.46*Math.cos(th),ang=Math.atan2(tx*g.s+ty*g.c,tx*g.c-ty*g.s)/D2R;      // along the ring
+        const m=gsap.parseEase('power3.inOut')(Math.max(0,(t-.55)/.45)),face=-k.a/D2R;
+        gsap.set(c.el,{x:w.x+(tp.x-w.x)*m,y:w.y+(tp.y-w.y)*m,z:w.z+(tp.z-w.z)*m,rotation:(ang+90)*(1-m)+tp.rotation*m,
+          rotationX:face*(1-m)+tp.rotationX*m,rotationY:35*Math.cos(th)*(1-m),scale:tp.scale*(.62+.38*m)});
+      }},i*.004);
+    });
+    return tl;
+  }
+};
 function ripple(){
   const L=S.L,D=L.deckSetup,tl=gsap.timeline();
   tl.set('#ripple',{x:D.x,y:D.y,z:-2},0).fromTo('#ripple',{scale:.2,autoAlpha:1},{scale:Math.max(L.W,L.H)/60,autoAlpha:0,duration:1.9,ease:EO,immediateRender:false},0)
@@ -594,7 +699,9 @@ async function gather(){
   gsap.set('#cam',{rotationX:RM()?TILT.setup:64,z:RM()?0:-500});
   tl.add(camTo('setup',2.9),.2);Sound.whoosh();
   S.deck.forEach(c=>gsap.set(c.el,{...offPose(c),autoAlpha:0}));
-  const vt=vortexTL(S.deck,{target:(c,i)=>stackPose(i,L.deckSetup),dur:2.3});
+  const kinds=Object.keys(GATHERS);S.gatherKind=RM()?'vortex':(S.forceGather||kinds[Math.floor(Math.random()*kinds.length)]);
+  const vt=GATHERS[S.gatherKind](S.deck,(c,i)=>stackPose(i,L.deckSetup));
+  vt.add(()=>S.deck.forEach((c,i)=>gsap.set(c.el,{...stackPose(i,L.deckSetup),autoAlpha:1})));   // exact landing
   tl.add(vt,.35);
   const end=.35+vt.duration();
   tl.add(ripple(),end-.2).add(pIn('#setup',{y:120}),end-.35).add(pIn('#deckHint',{y:20,d:.8}),end+.1).add(pIn('#hud',{y:-20,d:.8}),end-.1).add(()=>previewSpread(),end+.1);
