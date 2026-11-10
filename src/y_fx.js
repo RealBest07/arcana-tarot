@@ -338,7 +338,7 @@ function paintReading(x,W,H,cs,imgs,dry,art={}){
     });
     y+=ch+lab+(r<rows-1?34:24);
   }
-  y+=26;const bx=pad+8,bw=inner-16;x.font=F(400,26,TH);const sl=wrapLines(x,buildSummary().join('. ')+'.',bw-68),bh=104+sl.length*46+64;
+  y+=26;const bx=pad+8,bw=inner-16;x.font=F(400,26,TH);const sl=wrapLines(x,buildSummary().join(' '),bw-68),bh=104+sl.length*46+64;
   if(!dry){
     x.fillStyle='rgba(14,13,17,.82)';rr(x,bx,y,bw,bh,22);x.fill();x.strokeStyle=PNG.line+'.65)';x.lineWidth=1.5;x.stroke();
     if(art.tl){const o=64;x.drawImage(art.tl,bx-8,y-8,o,o);x.drawImage(art.tr,bx+bw+8-o,y-8,o,o);x.drawImage(art.bl,bx-8,y+bh+8-o,o,o);x.drawImage(art.br,bx+bw+8-o,y+bh+8-o,o,o)}
@@ -368,7 +368,7 @@ async function saveReading(){
     let shared=false;
     if(S.lastPtr!=='mouse'&&navigator.canShare&&navigator.canShare({files:[file]})){try{await navigator.share({files:[file],title:'ARCANA · ไพ่ทาโรต์'});shared=true}catch(e){shared=e&&e.name==='AbortError'}}
     if(!shared){const a=document.createElement('a'),u=URL.createObjectURL(blob);a.href=u;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),5000)}
-    btn.textContent='บันทึกแล้ว ✓';
+    btn.innerHTML='<svg class="i" aria-hidden="true"><use href="#i-check"/></svg> บันทึกแล้ว';
   }catch(e){console.error(e);btn.textContent='บันทึกไม่สำเร็จ'}
   setTimeout(()=>{btn.innerHTML=old;btn.disabled=false},1800);
 }

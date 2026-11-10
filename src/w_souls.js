@@ -188,7 +188,7 @@ document.head.insertAdjacentHTML('beforeend',`<style>#shufUI p,#prompt p,#prompt
   const st=$('#stage');
   st.insertAdjacentHTML('beforeend',`<div id="swipeHint" aria-hidden="true">
       <svg viewBox="0 0 220 40"><path class="sh" d="M28,20 H192"/><path class="sh" d="M40,9 L26,20 L40,31 M180,9 L194,20 L180,31"/><circle class="sd" cx="110" cy="20" r="4"/></svg>
-      <span><b>✋</b> ปัดซ้าย–ขวา เพื่อเลื่อนดูไพ่</span></div>
+      <span>ปัดซ้าย–ขวา เพื่อเลื่อนดูไพ่</span></div>
     <div class="fanEdge l" aria-hidden="true">‹</div><div class="fanEdge r" aria-hidden="true">›</div>`);
   const hint=$('#swipeHint'),dot=hint.querySelector('.sd'),eL=st.querySelector('.fanEdge.l'),eR=st.querySelector('.fanEdge.r');
   let loop=null,shown=false,panned=false;

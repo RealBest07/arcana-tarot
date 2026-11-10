@@ -175,7 +175,7 @@ function summaryHTML(){
   const cs=S.picked,majors=cs.filter(c=>c.arcana==='major').length,revN=cs.filter(c=>c.reversed).length;
   const cnt={};cs.forEach(c=>{if(c.suit)cnt[c.suit]=(cnt[c.suit]||0)+1});
   return `<div class="rd-pos">สรุปคำทำนาย · ${SPREADS[S.spreadKey].name}</div><h3 class="rd-h">ภาพรวมของการเปิดไพ่</h3>
-    ${S.question?`<p class="sum-q">“${esc(S.question)}”</p>`:''}<p class="rd-text">${buildSummary().join('. ')}.</p>
+    ${S.question?`<p class="sum-q">“${esc(S.question)}”</p>`:''}<p class="rd-text">${buildSummary().join(' ')}</p>
     <div class="sum-chips"><span>ไพ่ใบใหญ่ ${majors}</span>${Object.entries(cnt).map(([s,k])=>`<span>${SUITS[s].th} ${k}</span>`).join('')}<span>กลับหัว ${revN}</span></div>`;
 }
 
