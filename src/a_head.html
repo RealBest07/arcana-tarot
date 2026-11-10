@@ -352,6 +352,21 @@ input[type=range]{width:100%;accent-color:var(--gold);touch-action:auto}
 #btnMotion[aria-pressed=false] .ic{opacity:.45}
 @media (max-width:560px){#hud #btnMotion{position:absolute;top:10px;left:calc(100vw - 92px)}}
 .mand{}@media (prefers-reduced-motion:reduce){html:not(.mfull) :is(.mand,.rot,.spin,.tw,.flow,.tw2,#fog i,#altar .pool,#altar .flm,#lantern i){animation:none!important}}
+/* ============ RITE CHOOSER ============ */
+#rites{position:fixed;inset:0;z-index:9;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:22px;padding:72px 16px 24px;pointer-events:none;opacity:0;visibility:hidden}
+#rites h2{margin:0;font-weight:400;font-size:clamp(15px,1.9vw,19px);color:var(--muted)}
+#rites .doors{display:flex;gap:clamp(16px,3vw,40px);perspective:1100px;pointer-events:auto}
+.door{position:relative;width:clamp(150px,22vw,250px);aspect-ratio:5/8;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:6px;padding:0 14px 22px;
+  border:1px solid var(--line);border-radius:999px 999px 14px 14px;background:linear-gradient(180deg,rgba(26,24,30,.55),rgba(14,13,17,.88));color:var(--ink);
+  transform-style:preserve-3d;transition:border-color .25s,background-color .25s;will-change:transform}
+.door::before{content:"";position:absolute;inset:7px;border:1px solid rgba(184,149,90,.22);border-radius:999px 999px 9px 9px;pointer-events:none}
+.door svg.art{position:absolute;left:50%;top:15%;width:62%;translate:-50% 0;fill:none;stroke:var(--gold);stroke-width:1.2;stroke-linecap:round;stroke-linejoin:round}
+.door svg.art .st{fill:var(--gold2);stroke:none}
+.door b{font-weight:600;font-size:clamp(17px,1.9vw,21px);color:var(--gold2)}
+.door span{font-size:clamp(11.5px,1.2vw,13.5px);color:var(--muted);line-height:1.5;text-align:center}
+.door:hover,.door:focus-visible{border-color:var(--gold2);background:linear-gradient(180deg,rgba(40,35,40,.6),rgba(20,18,22,.9))}
+.door:focus-visible{outline:2px solid var(--gold2);outline-offset:4px}
+@media (max-width:560px){#rites .doors{gap:12px}.door{width:min(42vw,170px)}}
 </style>
 </head>
 <body>
@@ -363,6 +378,9 @@ input[type=range]{width:100%;accent-color:var(--gold);touch-action:auto}
   <symbol id="i-x" viewBox="0 0 24 24"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></symbol>
   <symbol id="i-check" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></symbol>
   <symbol id="i-hand" viewBox="0 0 24 24"><path d="M18 11V6a2 2 0 0 0-4 0"/><path d="M14 10V4a2 2 0 0 0-4 0v2"/><path d="M10 10.5V6a2 2 0 0 0-4 0v8"/><path d="M18 8a2 2 0 1 1 4 0v6a8 8 0 0 1-8 8h-2c-2.8 0-4.5-.9-6-2.3l-3.6-3.6a2 2 0 0 1 2.8-2.8L7 15"/></symbol>
+  <symbol id="i-compass" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="m16.24 7.76-1.8 5.4a2 2 0 0 1-1.28 1.28l-5.4 1.8 1.8-5.4a2 2 0 0 1 1.28-1.28z"/></symbol>
+  <symbol id="i-undo" viewBox="0 0 24 24"><path d="M9 14 4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/></symbol>
+  <symbol id="i-calendar" viewBox="0 0 24 24"><path d="M8 2v4"/><path d="M16 2v4"/><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M3 10h18"/></symbol>
 </svg>
 <div id="bgimg" aria-hidden="true"></div>
 <canvas id="stars" aria-hidden="true"></canvas>
@@ -374,6 +392,13 @@ input[type=range]{width:100%;accent-color:var(--gold);touch-action:auto}
   <h1 id="title" aria-label="ARCANA"></h1>
   <p id="tagline">อ่านใจผ่านไพ่ ให้ดวงดาวกระซิบคำตอบ</p>
   <button id="beginBtn" type="button">เริ่ม</button>
+  <section id="rites" aria-label="เลือกพิธี">
+    <h2>เลือกพิธีที่จะเปิดคืนนี้</h2>
+    <div class="doors">
+      <button class="door" type="button" data-rite="tarot"><svg class="art" viewBox="0 0 100 100" aria-hidden="true"><rect x="18" y="22" width="32" height="54" rx="3" transform="rotate(-14 34 49)"/><rect x="34" y="18" width="32" height="54" rx="3"/><rect x="50" y="22" width="32" height="54" rx="3" transform="rotate(14 66 49)"/><circle cx="50" cy="45" r="7"/><path d="M50 34v4M50 52v4M39 45h4M57 45h4"/></svg><b>ไพ่ทาโรต์</b><span>สับ เลือก และเปิดไพ่ 78 ใบ</span></button>
+      <button class="door" type="button" data-rite="stars"><svg class="art" viewBox="0 0 100 100" aria-hidden="true"><circle cx="50" cy="50" r="38"/><circle cx="50" cy="50" r="26" stroke-dasharray="1 4"/><path d="M30 38 44 30 58 44 70 36M44 30 40 56 58 64 58 44"/><circle class="st" cx="30" cy="38" r="2.4"/><circle class="st" cx="44" cy="30" r="3"/><circle class="st" cx="58" cy="44" r="2.6"/><circle class="st" cx="70" cy="36" r="2"/><circle class="st" cx="40" cy="56" r="2.2"/><circle class="st" cx="58" cy="64" r="2.8"/></svg><b>ดาวเกิด</b><span>ท้องฟ้าจริงในคืนที่คุณเกิด</span></button>
+    </div>
+  </section>
   <div id="motionNote" class="glass" role="note" hidden>
     <p>อุปกรณ์นี้ตั้งค่า "ลดภาพเคลื่อนไหว" ไว้ เอฟเฟกต์ 3D และ particle จึงถูกปิดอยู่</p>
     <div class="row"><button class="btn primary" id="motionOn" type="button">เปิดเอฟเฟกต์เต็ม</button><button class="btn" id="motionKeep" type="button">ใช้แบบลดไว้</button></div>
@@ -382,6 +407,7 @@ input[type=range]{width:100%;accent-color:var(--gold);touch-action:auto}
   <div id="hud">
     <button class="btn small" id="btnSound" type="button" aria-pressed="false" aria-label="เสียง: ปิด"><span class="ic"><svg class="i" aria-hidden="true"><use href="#i-sound"/></svg></span><span class="tx">เสียง: ปิด</span></button>
     <button class="btn small" id="btnMotion" type="button" aria-pressed="true"><span class="ic"><svg class="i" aria-hidden="true"><use href="#i-flame"/></svg></span><span class="tx">เอฟเฟกต์: เต็ม</span></button>
+    <button class="btn small" id="btnRites" type="button" style="display:none" aria-label="เลือกพิธีอื่น"><span class="ic"><svg class="i" aria-hidden="true"><use href="#i-compass"/></svg></span><span class="tx">พิธีอื่น</span></button>
     <button class="btn small" id="btnNew" type="button" style="display:none" aria-label="เปิดไพ่ใหม่"><span class="ic"><svg class="i" aria-hidden="true"><use href="#i-redo"/></svg></span><span class="tx">เปิดไพ่ใหม่</span></button>
   </div>
 

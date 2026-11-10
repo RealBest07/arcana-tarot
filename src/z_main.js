@@ -505,7 +505,7 @@ function fanTo(animate,dur=.65){
    `go()` ignores input while a transition runs. One function per phase transition;
    every next entrance is scheduled before the previous exit ends.
    ====================================================================== */
-const setState=s=>{S.state=s;$('#stage').dataset.state=s};
+const setState=s=>{S.state=s;$('#stage').dataset.state=s;const b=$('#btnRites');if(b)b.style.display=(s==='setup'||s==='stars')?'':'none'};
 async function go(fn){
   if(S.busy)return;S.busy=true;
   try{await fn()}finally{S.busy=false;if(S.pendingResize){S.pendingResize=false;onResize(true)}}
@@ -684,10 +684,10 @@ function playIntro(){
   return tl;
 }
 
-/* ---- PHASE 2 · gather: title → logo (GSAP Flip), hyperspace stars, 78-card 3D tornado ---- */
-async function gather(){
+/* ---- PHASE 2 · leave the intro: title → logo (GSAP Flip), hyperspace stars, then the rite chooser ---- */
+async function leaveIntro(){
   setState('gather');S.hideNote&&S.hideNote();
-  const tl=gsap.timeline(),L=S.L;
+  const tl=gsap.timeline();
   S.intro&&S.intro.kill();S.shimmer&&S.shimmer.kill();gsap.to('#title .hi',{opacity:0,duration:.3});
   gsap.to('#title .L',{autoAlpha:1,y:0,z:0,x:0,rotationX:0,filter:'blur(0px)',duration:.4,ease:EO});
   tl.add(pOut('#tagline',{y:-24}),0).add(pOut('#beginBtn',{y:24}),0)
@@ -697,6 +697,58 @@ async function gather(){
       Flip.from(st,{duration:RM()?.3:1.9,ease:BIG,scale:true});
     },.05);
   if(!RM())tl.to(STAR,{warp:1,duration:.9,ease:EIO},.1).to(STAR,{warp:0,duration:1.4,ease:EO},1.3);
+  Sound.whoosh();
+  await tlUntil(tl,RM()?.3:1.25);
+  await showRites();
+}
+
+/* ---- the rite chooser: two arched doors rise out of the dark; the chosen one swallows the view ---- */
+const RITE_V='__BUILD__';                         // build stamp, so a new deploy never runs a cached rite script
+function loadRite(name){
+  if(name==='stars'&&window.StarRite)return Promise.resolve();
+  return new Promise((res,rej)=>{const sc=document.createElement('script');sc.src=`${name}.js?v=${RITE_V}`;sc.onload=res;sc.onerror=()=>rej(new Error('load '+name));document.head.appendChild(sc)});
+}
+function hudIn(){const h=$('#hud');if(gsap.getProperty(h,'autoAlpha')<.5)pIn(h,{y:-20,d:.8})}
+async function showRites(msg){
+  setState('choose');hudIn();
+  const R=$('#rites'),doors=$$('.door',R);$('h2',R).textContent=msg||'เลือกพิธีที่จะเปิดคืนนี้';
+  gsap.set(R,{autoAlpha:1});gsap.set(doors,{clearProps:'scale,z'});
+  const tl=gsap.timeline();
+  if(RM())tl.fromTo([$('h2',R),...doors],{autoAlpha:0},{autoAlpha:1,duration:.4,stagger:.08});
+  else tl.fromTo($('h2',R),{autoAlpha:0,y:-14},{autoAlpha:1,y:0,duration:.8,ease:EO},0)
+    .fromTo(doors,{autoAlpha:0,y:160,rotationX:-70,z:-260,transformOrigin:'50% 100%'},{autoAlpha:1,y:0,rotationX:0,z:0,duration:1.3,ease:'expo.out',stagger:.16},.1)
+    .to(STAR,{boost:.6,duration:.4,ease:EO},.3).to(STAR,{boost:0,duration:1.4,ease:EI},.7);
+  await tlUntil(tl,RM()?.3:.7);
+}
+async function pickRite(name){
+  if(S.state!=='choose')return;
+  const R=$('#rites'),doors=$$('.door',R),me=doors.find(d=>d.dataset.rite===name),other=doors.filter(d=>d!==me);
+  setState('gather');Sound.whoosh();buzz(15);
+  const loading=name==='stars'?loadRite('stars'):null;           // fetch while the doors are still moving
+  const tl=gsap.timeline();
+  if(RM())tl.to(R,{autoAlpha:0,duration:.3});
+  else tl.to($('h2',R),{autoAlpha:0,y:-10,duration:.4,ease:EI},0)
+    .to(other,{autoAlpha:0,y:120,rotationX:-55,duration:.7,ease:EI},0)
+    .to(me,{scale:1.6,z:260,autoAlpha:0,duration:.95,ease:'expo.in'},.1)
+    .to(STAR,{warp:.6,duration:.6,ease:EI},.35).to(STAR,{warp:0,duration:1.2,ease:EO},.95)
+    .set(R,{autoAlpha:0});
+  await tlDone(tl);
+  if(name==='tarot')return enterTarot();
+  try{await loading}catch(e){return showRites('เปิดพิธีนี้ไม่สำเร็จ ลองอีกครั้ง')}
+  await StarRite.enter();
+}
+// hover: the door leans toward the pointer
+$$('.door').forEach(d=>{
+  const ry=gsap.quickTo(d,'rotationY',{duration:.6,ease:EO}),rx=gsap.quickTo(d,'rotationX',{duration:.6,ease:EO});
+  d.addEventListener('pointermove',e=>{if(e.pointerType!=='mouse'||RM()||S.state!=='choose')return;const r=d.getBoundingClientRect();ry(((e.clientX-r.left)/r.width-.5)*16);rx(-((e.clientY-r.top)/r.height-.5)*12)});
+  d.addEventListener('pointerleave',()=>{if(S.state==='choose'){ry(0);rx(0)}});
+  d.addEventListener('click',()=>go(()=>pickRite(d.dataset.rite)));
+});
+
+/* ---- tarot rite: the 78 cards gather into the deck in one of the random GATHERS ---- */
+async function enterTarot(){
+  setState('gather');
+  const tl=gsap.timeline(),L=S.L=computeLayout();placeUI();
   gsap.set('#cam',{rotationX:RM()?TILT.setup:64,z:RM()?0:-500});
   tl.add(camTo('setup',2.9),.2);Sound.whoosh();
   S.deck.forEach(c=>gsap.set(c.el,{...offPose(c),autoAlpha:0}));
@@ -705,10 +757,23 @@ async function gather(){
   vt.add(()=>S.deck.forEach((c,i)=>gsap.set(c.el,{...stackPose(i,L.deckSetup),autoAlpha:1})));   // exact landing
   tl.add(vt,.35);
   const end=.35+vt.duration();
-  tl.add(ripple(),end-.2).add(pIn('#setup',{y:120}),end-.35).add(pIn('#deckHint',{y:20,d:.8}),end+.1).add(pIn('#hud',{y:-20,d:.8}),end-.1).add(()=>previewSpread(),end+.1);
+  tl.add(ripple(),end-.2).add(pIn('#setup',{y:120}),end-.35).add(pIn('#deckHint',{y:20,d:.8}),end+.1).add(()=>hudIn(),end-.1).add(()=>previewSpread(),end+.1);
   tl.add(()=>{S.deck.forEach((c,i)=>{c.idx=i;c.el.classList.toggle('top',i===77)})},end);
   await tlUntil(tl,end+.15);                       // interactive as soon as the deck lands; ripple keeps playing
   setState('setup');startSway();
+}
+/* back to the chooser from the setup table: the deck scatters off into the dark */
+async function leaveTarot(){
+  setState('gather');killPreview();S.prevCards=[];
+  const tl=gsap.timeline();
+  tl.add(pOut('#setup',{y:120}),0).add(pOut('#deckHint',{y:20}),0).add(camTo('intro',1.6),.1);
+  S.deck.forEach(c=>{const o=offPose(c);
+    if(RM())tl.to(c.el,{autoAlpha:0,duration:.3},0);
+    else tl.to(c.el,{...o,rotation:o.rotation+rand(-200,200),duration:rand(.9,1.3),ease:'power3.in'},rand(0,.35)).set(c.el,{autoAlpha:0},'>')});
+  if(!RM())tl.add(()=>Sound.whoosh(),.2).to(STAR,{warp:.4,duration:.6,ease:EI},.4).to(STAR,{warp:0,duration:1,ease:EO},1);
+  await tlDone(tl);
+  S.deck.forEach(c=>gsap.set(c.el,{...offPose(c),autoAlpha:0}));
+  await showRites();
 }
 
 /* ---- PHASE 3 · setup: choosing a spread lifts that many cards off the deck as a 3D preview ---- */
@@ -1027,7 +1092,8 @@ function onResize(force){
   if(S.busy&&!force){S.pendingResize=true;return}
   S.L=computeLayout();placeUI();
   const st=S.state;
-  if(st==='gather')return;
+  if(st==='gather'||st==='choose')return;
+  if(st==='stars'){window.StarRite&&StarRite.resize();return}
   unzoom('drop');altarTo(st,.01);
   if(st==='gallery'){S.G=galleryLayout();S.gpan=clamp(S.gpan||0,0,S.G.maxScroll)}
   if(st==='intro'){gsap.set('#tagline',{y:S.L.H*.13});gsap.set('#beginBtn',{y:S.L.H*.24});}
@@ -1041,10 +1107,11 @@ function init(){
   S.deck=fisherYates(CARDS).map(makeCard);
   const w=$('#world');S.deck.forEach(c=>{w.appendChild(c.el);gsap.set(c.el,{...offPose(c),autoAlpha:0})});
   placeUI();gsap.set('#dock',dockVars('hidden'));
-  gsap.set(['#setup','#shufUI','#prompt','#hintRow','#hud','#galBar','#deckHint','#zoomBg'],{autoAlpha:0});
+  gsap.set(['#setup','#shufUI','#prompt','#hintRow','#hud','#galBar','#deckHint','#zoomBg','#rites'],{autoAlpha:0});
   $$('.opt').forEach(b=>b.addEventListener('click',()=>chooseSpread(b.dataset.spread)));
   $('#shuffleRange').addEventListener('input',e=>{$('#shuffleLabel').textContent=`สับไพ่ ${e.target.value} ครั้ง`});
-  $('#beginBtn').onclick=()=>{if(S.state==='intro')go(gather)};
+  $('#beginBtn').onclick=()=>{if(S.state==='intro')go(leaveIntro)};
+  $('#btnRites').onclick=()=>{if(S.state==='setup')go(leaveTarot);else if(S.state==='stars')go(async()=>{await StarRite.leave();await showRites()})};
   $('#btnShuffle').onclick=()=>{if(S.state==='setup')go(toShuffle)};
   $('#btnRevealAll').onclick=()=>{if(S.state==='reveal')go(revealAll)};
   $('#btnNew').onclick=()=>{if(['pick','reveal','reading'].includes(S.state))go(newReading)};
