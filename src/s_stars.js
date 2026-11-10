@@ -454,6 +454,25 @@ const css=`#sky{position:fixed;inset:0;width:100%;height:100%;z-index:3;opacity:
   background:radial-gradient(120% 60% at 50% 0%,rgba(60,70,118,.55),transparent 65%),linear-gradient(180deg,#10111c,#09090e);
   box-shadow:0 24px 60px rgba(0,0,0,.75),0 0 0 1px rgba(0,0,0,.6),inset 0 1px 0 rgba(255,236,196,.1)}
 .sf-cal[hidden]{display:none}
+#skyForm .sf-field:disabled{opacity:.35;cursor:not-allowed}
+.clk-now{flex:1;text-align:center;font-size:19px;font-weight:600;color:var(--gold2);letter-spacing:.04em;text-shadow:0 0 14px rgba(233,190,110,.3)}
+.clk-now small{margin-left:.5em;font-size:12.5px;font-weight:400;color:var(--gold)}
+.clk-cols{position:relative;display:grid;grid-template-columns:1fr auto 1fr;gap:6px;align-items:start}
+.clk-cols::before{content:"";position:absolute;left:0;right:0;top:calc(22px + 90px);height:38px;border-top:1px solid rgba(220,194,140,.35);border-bottom:1px solid rgba(220,194,140,.35);
+  background:rgba(220,194,140,.05);pointer-events:none}
+.clk-lab{text-align:center;font-size:12px;color:var(--gold);height:22px}
+.clk-col{position:relative;height:218px;overflow-y:auto;scroll-snap-type:y mandatory;padding:90px 0;box-sizing:border-box;touch-action:pan-y;overscroll-behavior:contain;scrollbar-width:none;
+  -webkit-mask-image:linear-gradient(transparent,#000 30%,#000 70%,transparent);mask-image:linear-gradient(transparent,#000 30%,#000 70%,transparent)}
+.clk-col::-webkit-scrollbar{display:none}
+.clk-col button{display:block;width:100%;height:38px;scroll-snap-align:center;font:inherit;font-size:18px;color:var(--ink);background:none;border:1px solid transparent;border-radius:9px;cursor:pointer;
+  font-variant-numeric:tabular-nums;transition:color .15s,background-color .15s}
+.clk-col button:hover{color:var(--gold2);background:rgba(220,194,140,.08)}
+.clk-col button:focus-visible{outline:none;border-color:var(--gold2)}
+.clk-col button[aria-selected=true]{background:linear-gradient(180deg,#ecd6a2,#c4a066);color:#17130e;font-weight:600;box-shadow:0 0 14px rgba(236,214,162,.4)}
+.clk-sep{padding-top:calc(22px + 90px);font-size:22px;line-height:38px;color:var(--gold2)}
+.clk-quick{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;margin-top:10px}
+.clk-quick button{font:inherit;font-size:12.5px;color:var(--gold2);background:rgba(220,194,140,.06);border:1px solid rgba(220,194,140,.28);border-radius:999px;padding:4px 11px;cursor:pointer}
+.clk-quick button:hover{border-color:var(--gold2);background:rgba(220,194,140,.12)}
 .sf-cal::before{content:"";position:absolute;inset:5px;border:1px solid rgba(184,149,90,.14);border-radius:10px;pointer-events:none}
 .cal-head{display:flex;align-items:center;gap:6px;margin-bottom:10px}
 .cal-head button{font:inherit;color:var(--gold2);background:none;border:1px solid transparent;border-radius:9px;cursor:pointer}
@@ -526,7 +545,7 @@ function build(){
   <div class="sf-rule" aria-hidden="true"></div>
   <p class="sub">ใส่วัน เวลา และเมืองที่เกิด เพื่อเปิดท้องฟ้าเหนือหัวคุณในวินาทีนั้น</p>
   <div class="sf-row"><label>วันเกิด<button type="button" class="sf-field" id="bDateBtn" aria-haspopup="dialog" aria-expanded="false"><span class="v ph">เลือกวันเกิด</span><svg class="i" aria-hidden="true"><use href="#i-calendar"/></svg></button><input type="hidden" id="bDate"></label>
-  <label>เวลาเกิด<input type="time" id="bTime"></label></div>
+  <label>เวลาเกิด<button type="button" class="sf-field" id="bTimeBtn" aria-haspopup="dialog" aria-expanded="false"><span class="v ph">เลือกเวลา</span><svg class="i" aria-hidden="true"><use href="#i-clock"/></svg></button><input type="hidden" id="bTime"></label></div>
   <label class="chk"><input type="checkbox" id="bNoTime">ไม่ทราบเวลาเกิด (ใช้ 21:00 แทน)</label>
   <label>เมืองที่เกิด (เลือกเมืองที่ใกล้ที่สุด)<select id="bCity">${CITIES.map((c,i)=>`<option value="${i}">${c[0]}</option>`).join('')}</select></label>
   <button class="btn primary" id="bGo" type="button">เปิดท้องฟ้า<span aria-hidden="true"></span></button>
@@ -535,6 +554,16 @@ function build(){
     <div class="cal-head"><button type="button" class="cal-nav" data-step="-1" aria-label="ก่อนหน้า">‹</button><button type="button" class="cal-title" aria-live="polite"></button><button type="button" class="cal-nav" data-step="1" aria-label="ถัดไป">›</button></div>
     <div class="cal-body"></div>
     <div class="cal-foot"><span class="cal-tip"></span><button type="button" class="cal-close">ปิด</button></div>
+  </div>
+  <div class="sf-cal" id="bClock" role="dialog" aria-label="เลือกเวลาเกิด" hidden>
+    <div class="cal-head"><p class="clk-now" aria-live="polite"></p></div>
+    <div class="clk-cols">
+      <div><div class="clk-lab">ชั่วโมง</div><div class="clk-col" data-k="h" role="listbox" aria-label="ชั่วโมง"></div></div>
+      <div class="clk-sep" aria-hidden="true">:</div>
+      <div><div class="clk-lab">นาที</div><div class="clk-col" data-k="m" role="listbox" aria-label="นาที"></div></div>
+    </div>
+    <div class="clk-quick"><button type="button" data-t="06:00" aria-label="06:00 น.">เช้า</button><button type="button" data-t="12:00" aria-label="12:00 น.">เที่ยง</button><button type="button" data-t="18:00" aria-label="18:00 น.">เย็น</button><button type="button" data-t="00:00" aria-label="00:00 น.">เที่ยงคืน</button></div>
+    <div class="cal-foot"><span class="cal-tip">เลื่อนหรือแตะเพื่อเลือก</span><button type="button" class="cal-close">ตกลง</button></div>
   </div>
 </section>
 <aside id="skyInfo" class="glass" aria-label="ดาวเกิดของคุณ" aria-live="polite"></aside>
@@ -550,12 +579,13 @@ function build(){
   cv=$('#sky');cx=cv.getContext('2d');cache=document.createElement('canvas');cc=cache.getContext('2d');tip=$('#skyTip');
   gsap.set('#skyForm',{xPercent:-50,yPercent:-50});
   try{const v=JSON.parse(localStorage.getItem('arcana-birth')||'null');if(v){$('#bDate').value=v.d||'';$('#bTime').value=v.t||'';$('#bNoTime').checked=!!v.u;$('#bCity').value=v.c||0}}catch(e){}
-  calInit();
+  calInit();clkInit();
   /* unknown time: show the 21:00 stand-in in the greyed field, and give back what was typed when unticked */
-  const noTime=()=>{const on=$('#bNoTime').checked,t=$('#bTime');if(on&&!t.disabled){typedT=t.value;t.value='21:00'}else if(!on&&t.disabled)t.value=typedT;t.disabled=on};
+  const noTime=()=>{const on=$('#bNoTime').checked,t=$('#bTime');if(on&&!t.disabled){typedT=t.value;t.value='21:00'}else if(!on&&t.disabled)t.value=typedT;t.disabled=on;
+    $('#bTimeBtn').disabled=on;if(on)clkClose();clkShow()};
   $('#bNoTime').addEventListener('change',noTime);noTime();
   $('#bGo').addEventListener('click',()=>{if(S.state==='stars'&&!S.busy&&V.mode==='form')go(openSky)});
-  $('#skyForm').addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.target.closest('#bCal,#bDateBtn')){e.preventDefault();$('#bGo').click()}});
+  $('#skyForm').addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.target.closest('#bCal,#bDateBtn,#bClock,#bTimeBtn')){e.preventDefault();$('#bGo').click()}});
   cv.addEventListener('pointerdown',onDown);cv.addEventListener('pointermove',onMove);cv.addEventListener('pointerup',onUp);cv.addEventListener('pointercancel',()=>{V.drag=null;V.dirty=true});
   cv.addEventListener('pointerleave',()=>{V.hover=null;tip.style.opacity=0;zodHover(null);V.dirty=true});
   cv.addEventListener('wheel',onWheel,{passive:false});
@@ -950,7 +980,7 @@ function calRender(focusSel){
   if(focusSel){const b=body.querySelector('[aria-selected=true]:not(:disabled)')||body.querySelector('.now:not(:disabled)')||body.querySelector('button:not(:disabled)');b&&b.focus({preventScroll:true})}
 }
 function calOpen(){
-  if(CAL.open)return;CAL.open=true;const S=calSel(),T=calToday();
+  if(CAL.open)return;if(CLK.open)clkClose();CAL.open=true;const S=calSel(),T=calToday();
   if(S){CAL.view='d';CAL.y=S.y;CAL.m=S.m}else{CAL.view='y';CAL.y=T.y-25;CAL.m=0}
   CAL.y0=Math.max(Y_MIN,CAL.y-10);
   const f=$('#bDateBtn'),cal=$('#bCal'),fr=f.getBoundingClientRect(),pr=$('#skyForm').getBoundingClientRect();
@@ -959,8 +989,8 @@ function calOpen(){
   gsap.fromTo(cal,{autoAlpha:0,y:-8,scale:.97,transformOrigin:'50% 0'},{autoAlpha:1,y:0,scale:1,duration:RM()?.01:.28,ease:EO});
 }
 /* below the field, lifted to stay on screen (it may then cover the field: the title says what is being picked) */
-function calPlace(){
-  if(!CAL.open)return;const cal=$('#bCal'),fr=$('#bDateBtn').getBoundingClientRect(),pr=$('#skyForm').getBoundingClientRect();
+function calPlace(cal=$('#bCal'),field=$('#bDateBtn')){
+  if(cal.hidden)return;const fr=field.getBoundingClientRect(),pr=$('#skyForm').getBoundingClientRect();
   const top=Math.max(8,Math.min(fr.bottom+8,innerHeight-cal.offsetHeight-10));cal.style.top=(top-pr.top)+'px';
 }
 function calClose(back){
@@ -1002,7 +1032,65 @@ function calInit(){
     if(t.getUTCFullYear()<Y_MIN||t>Date.UTC(T.y,T.m,T.d))return;
     CAL.y=t.getUTCFullYear();CAL.m=t.getUTCMonth();calRender();cal.querySelector(`.cal-body [data-d="${t.getUTCDate()}"]`)?.focus();
   });
-  document.addEventListener('pointerdown',e=>{if(CAL.open&&!e.target.closest('#bCal,#bDateBtn'))calClose()},true);
+  document.addEventListener('pointerdown',e=>{if(CAL.open&&!e.target.closest('#bCal,#bDateBtn'))calClose();if(CLK.open&&!e.target.closest('#bClock,#bTimeBtn'))clkClose()},true);
+}
+/* ---- birth-time picker: hour and minute wheels (24 h, Thai time-of-day word), the field keeps hh:mm ---- */
+const CLK={open:false};
+const p2=n=>String(n).padStart(2,'0');
+const dayPart=h=>h<6?'ดึก':h<12?'เช้า':h<16?'บ่าย':h<19?'เย็น':'ค่ำ';
+function clkVal(){const v=$('#bTime').value;if(!v)return null;const [h,m]=v.split(':').map(Number);return{h,m}}
+function clkShow(){
+  const t=clkVal(),el=$('#bTimeBtn .v');
+  el.textContent=t?`${p2(t.h)}:${p2(t.m)} น. · ${dayPart(t.h)}`:'เลือกเวลา';el.classList.toggle('ph',!t);
+  $('#bTimeBtn').setAttribute('aria-label',t?`เวลาเกิด ${el.textContent} (กดเพื่อเปลี่ยน)`:'เลือกเวลาเกิด');
+  if(CLK.open){
+    const c=$('#bClock');c.querySelector('.clk-now').innerHTML=t?`${p2(t.h)}:${p2(t.m)} น.<small>${dayPart(t.h)}</small>`:'เลือกเวลาเกิด';
+    c.querySelectorAll('.clk-col button').forEach(b=>b.setAttribute('aria-selected',!!t&&+b.dataset.v===(b.parentNode.dataset.k==='h'?t.h:t.m)));
+  }
+}
+function clkSet(h,m){const t=clkVal()||{h:21,m:0};$('#bTime').value=`${p2(h??t.h)}:${p2(m??t.m)}`;$('#bErr').textContent='';clkShow()}
+function clkScroll(smooth){
+  const t=clkVal()||{h:21,m:0};
+  $('#bClock').querySelectorAll('.clk-col').forEach(col=>{const b=col.querySelector(`[data-v="${col.dataset.k==='h'?t.h:t.m}"]`);
+    if(b)col.scrollTo({top:b.offsetTop-90,behavior:smooth?'smooth':'auto'})});
+}
+function clkOpen(){
+  if(CLK.open||$('#bTimeBtn').disabled)return;if(CAL.open)calClose();CLK.open=true;
+  const c=$('#bClock');c.hidden=false;$('#bTimeBtn').setAttribute('aria-expanded','true');clkShow();clkScroll(false);calPlace(c,$('#bTimeBtn'));
+  const b=c.querySelector('.clk-col[data-k=h] [aria-selected=true]')||c.querySelector('.clk-col[data-k=h] [data-v="21"]');b&&b.focus({preventScroll:true});
+  gsap.fromTo(c,{autoAlpha:0,y:-8,scale:.97,transformOrigin:'50% 0'},{autoAlpha:1,y:0,scale:1,duration:RM()?.01:.28,ease:EO});
+}
+function clkClose(back){
+  if(!CLK.open)return;CLK.open=false;const c=$('#bClock');$('#bTimeBtn').setAttribute('aria-expanded','false');
+  gsap.to(c,{autoAlpha:0,y:-6,duration:RM()?.01:.18,ease:'power2.in',onComplete:()=>{c.hidden=true}});
+  if(back)$('#bTimeBtn').focus({preventScroll:true});
+}
+function clkInit(){
+  const c=$('#bClock');
+  c.querySelector('[data-k=h]').innerHTML=[...Array(24)].map((_,h)=>`<button type="button" role="option" data-v="${h}" aria-label="${h} นาฬิกา">${p2(h)}</button>`).join('');
+  c.querySelector('[data-k=m]').innerHTML=[...Array(60)].map((_,m)=>`<button type="button" role="option" data-v="${m}" aria-label="${m} นาที">${p2(m)}</button>`).join('');
+  clkShow();
+  $('#bTimeBtn').addEventListener('click',()=>CLK.open?clkClose():clkOpen());
+  c.querySelector('.cal-close').addEventListener('click',()=>{if(!clkVal())clkSet(21,0);clkClose(true)});
+  c.querySelectorAll('.clk-col').forEach(col=>col.addEventListener('click',e=>{
+    const b=e.target.closest('button');if(!b)return;const v=+b.dataset.v;
+    col.dataset.k==='h'?clkSet(v,null):clkSet(null,v);clkScroll(true);
+  }));
+  /* a wheel or swipe picks the row that settles in the band */
+  c.querySelectorAll('.clk-col').forEach(col=>col.addEventListener('scroll',()=>{
+    clearTimeout(col._t);col._t=setTimeout(()=>{if(!CLK.open)return;const n=col.children.length,i=Math.max(0,Math.min(n-1,Math.round(col.scrollTop/38))),t=clkVal();
+      if(!t||(col.dataset.k==='h'?t.h:t.m)!==i)col.dataset.k==='h'?clkSet(i,null):clkSet(null,i)},140);
+  },{passive:true}));
+  c.querySelector('.clk-quick').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;const [h,m]=b.dataset.t.split(':').map(Number);clkSet(h,m);clkScroll(true)});
+  c.addEventListener('keydown',e=>{
+    if(e.key==='Escape'){e.preventDefault();e.stopPropagation();clkClose(true);return}
+    const b=document.activeElement,col=b&&b.closest('.clk-col');if(!col)return;
+    if(e.key==='Enter'||e.key===' '){e.preventDefault();b.click();if(col.dataset.k==='m'&&e.key==='Enter')clkClose(true);else if(col.dataset.k==='h'&&e.key==='Enter'){const n=c.querySelector('.clk-col[data-k=m] [aria-selected=true]')||c.querySelector('.clk-col[data-k=m] button');n.focus({preventScroll:true})}return}
+    const n=col.children.length,i=+b.dataset.v;
+    if(e.key==='ArrowUp'||e.key==='ArrowDown'){e.preventDefault();const j=(i+(e.key==='ArrowDown'?1:-1)+n)%n;const t=col.children[j];
+      col.dataset.k==='h'?clkSet(j,null):clkSet(null,j);t.focus({preventScroll:true});clkScroll(true)}
+    else if(e.key==='ArrowLeft'||e.key==='ArrowRight'){e.preventDefault();const o=c.querySelector(`.clk-col[data-k=${e.key==='ArrowRight'?'m':'h'}]`);(o.querySelector('[aria-selected=true]')||o.firstChild).focus({preventScroll:true})}
+  });
 }
 function birthFrom(){
   const d=$('#bDate').value,noT=$('#bNoTime').checked,t=noT?'21:00':($('#bTime').value||''),ci=+$('#bCity').value||0;
