@@ -325,7 +325,7 @@ const ZOD=[
   ['scorpius','Sco',[[.55,.62,'Antares'],[.32,.82,'Graffias'],[.42,.74,'Dschubba'],[.72,.42,'Eps Sco'],[.78,.28,'Zeta Sco'],[.62,.06,'Sargas'],[.42,.08,'Iota Sco'],[.42,.28,'Shaula']]],
   ['sagittarius','Sgr',[[.95,.21,'Alnasl'],[.66,.04,'Kaus Borealis'],[.75,.51,'Kaus Australis'],[.8,.28,'Kaus Media'],[.45,.3,'Nunki'],[.35,.35,'Tau Sgr'],[.45,.55,'Ascella'],[.55,.3,'Phi Sgr']]],
   ['capricornus','Cap',[[.3,.1,'Algedi'],[.15,.28,'Dabih'],[.95,.33,'Deneb Algedi'],[.85,.45,'Nashira'],[.1,.75,'Omega Cap'],[.2,.6,'Psi Cap'],[.55,.72,'Zeta Cap'],[.55,.42,'Theta Cap']]],
-  ['aquarius','Aqr',[[.62,.28,'Sadalmelik'],[.32,.22,'Sadalsuud'],[.55,.42,'Zeta Aqr'],[.7,.65,'Lambda Aqr'],[.55,.85,'Skat'],[.08,.5,'Albali']]],
+  ['aquarius','Aqr',[[.38,.18,'Sadalmelik'],[.72,.28,'Sadalsuud'],[.5,.38,'Zeta Aqr'],[.44,.36,'Sadachbia'],[.6,.68,'Lambda Aqr'],[.72,.86,'Skat']]],
   ['pisces','Psc',[[.5,.43,'Alrescha'],[.45,.2,'Eta Psc'],[.75,.2,'Phi Psc'],[.5,.78,'Iota Psc'],[.2,.68,'Gamma Psc']]]
 ].map(([n,c,anc],i)=>({n,c,anc,i,a:0,img:null,refl:null}));
 const ZTH=['แกะ','วัว','คนคู่','ปู','สิงโต','หญิงสาว','คันชั่ง','แมงป่อง','คนยิงธนู','แพะทะเล','คนแบกหม้อน้ำ','ปลา'];
