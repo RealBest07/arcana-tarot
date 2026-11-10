@@ -470,6 +470,13 @@ const css=`#sky{position:fixed;inset:0;width:100%;height:100%;z-index:3;opacity:
 .clk-col button:focus-visible{outline:none;border-color:var(--gold2)}
 .clk-col button[aria-selected=true]{background:linear-gradient(180deg,#ecd6a2,#c4a066);color:#17130e;font-weight:600;box-shadow:0 0 14px rgba(236,214,162,.4)}
 .clk-sep{padding-top:calc(22px + 90px);font-size:22px;line-height:38px;color:var(--gold2)}
+.city-list{max-height:min(300px,50vh);overflow-y:auto;touch-action:pan-y;overscroll-behavior:contain;display:grid;grid-template-columns:1fr 1fr;gap:4px;padding-right:2px;
+  scrollbar-width:thin;scrollbar-color:rgba(220,194,140,.4) transparent}
+.city-list button{font:inherit;font-size:15px;text-align:left;padding:9px 12px;color:var(--ink);background:none;border:1px solid transparent;border-radius:9px;cursor:pointer;transition:background-color .15s,color .15s}
+.city-list button:hover{color:var(--gold2);background:rgba(220,194,140,.08);border-color:rgba(220,194,140,.3)}
+.city-list button:focus-visible{outline:none;border-color:var(--gold2)}
+.city-list button[aria-selected=true]{background:linear-gradient(180deg,#ecd6a2,#c4a066);color:#17130e;font-weight:600;box-shadow:0 0 14px rgba(236,214,162,.4)}
+@media (max-width:420px){.city-list{grid-template-columns:1fr}}
 .clk-quick{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;margin-top:10px}
 .clk-quick button{font:inherit;font-size:12.5px;color:var(--gold2);background:rgba(220,194,140,.06);border:1px solid rgba(220,194,140,.28);border-radius:999px;padding:4px 11px;cursor:pointer}
 .clk-quick button:hover{border-color:var(--gold2);background:rgba(220,194,140,.12)}
@@ -547,13 +554,18 @@ function build(){
   <div class="sf-row"><label>วันเกิด<button type="button" class="sf-field" id="bDateBtn" aria-haspopup="dialog" aria-expanded="false"><span class="v ph">เลือกวันเกิด</span><svg class="i" aria-hidden="true"><use href="#i-calendar"/></svg></button><input type="hidden" id="bDate"></label>
   <label>เวลาเกิด<button type="button" class="sf-field" id="bTimeBtn" aria-haspopup="dialog" aria-expanded="false"><span class="v ph">เลือกเวลา</span><svg class="i" aria-hidden="true"><use href="#i-clock"/></svg></button><input type="hidden" id="bTime"></label></div>
   <label class="chk"><input type="checkbox" id="bNoTime">ไม่ทราบเวลาเกิด (ใช้ 21:00 แทน)</label>
-  <label>เมืองที่เกิด (เลือกเมืองที่ใกล้ที่สุด)<select id="bCity">${CITIES.map((c,i)=>`<option value="${i}">${c[0]}</option>`).join('')}</select></label>
+  <label>เมืองที่เกิด (เลือกเมืองที่ใกล้ที่สุด)<button type="button" class="sf-field" id="bCityBtn" aria-haspopup="listbox" aria-expanded="false"><span class="v"></span><svg class="i" aria-hidden="true"><use href="#i-compass"/></svg></button><input type="hidden" id="bCity" value="0"></label>
   <button class="btn primary" id="bGo" type="button">เปิดท้องฟ้า<span aria-hidden="true"></span></button>
   <p class="err" id="bErr" aria-live="polite"></p>
   <div class="sf-cal" id="bCal" role="dialog" aria-label="เลือกวันเกิด" hidden>
     <div class="cal-head"><button type="button" class="cal-nav" data-step="-1" aria-label="ก่อนหน้า">‹</button><button type="button" class="cal-title" aria-live="polite"></button><button type="button" class="cal-nav" data-step="1" aria-label="ถัดไป">›</button></div>
     <div class="cal-body"></div>
     <div class="cal-foot"><span class="cal-tip"></span><button type="button" class="cal-close">ปิด</button></div>
+  </div>
+  <div class="sf-cal" id="bCityPop" role="dialog" aria-label="เลือกเมืองที่เกิด" hidden>
+    <div class="cal-head"><p class="clk-now">เมืองที่เกิด</p></div>
+    <div class="city-list" role="listbox" aria-label="เมือง">${CITIES.map((c,i)=>`<button type="button" role="option" data-i="${i}">${c[0]}</button>`).join('')}</div>
+    <div class="cal-foot"><span class="cal-tip">เลือกเมืองที่ใกล้ที่สุด</span><button type="button" class="cal-close">ปิด</button></div>
   </div>
   <div class="sf-cal" id="bClock" role="dialog" aria-label="เลือกเวลาเกิด" hidden>
     <div class="cal-head"><p class="clk-now" aria-live="polite"></p></div>
@@ -579,13 +591,13 @@ function build(){
   cv=$('#sky');cx=cv.getContext('2d');cache=document.createElement('canvas');cc=cache.getContext('2d');tip=$('#skyTip');
   gsap.set('#skyForm',{xPercent:-50,yPercent:-50});
   try{const v=JSON.parse(localStorage.getItem('arcana-birth')||'null');if(v){$('#bDate').value=v.d||'';$('#bTime').value=v.t||'';$('#bNoTime').checked=!!v.u;$('#bCity').value=v.c||0}}catch(e){}
-  calInit();clkInit();
+  calInit();clkInit();cityInit();
   /* unknown time: show the 21:00 stand-in in the greyed field, and give back what was typed when unticked */
   const noTime=()=>{const on=$('#bNoTime').checked,t=$('#bTime');if(on&&!t.disabled){typedT=t.value;t.value='21:00'}else if(!on&&t.disabled)t.value=typedT;t.disabled=on;
     $('#bTimeBtn').disabled=on;if(on)clkClose();clkShow()};
   $('#bNoTime').addEventListener('change',noTime);noTime();
   $('#bGo').addEventListener('click',()=>{if(S.state==='stars'&&!S.busy&&V.mode==='form')go(openSky)});
-  $('#skyForm').addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.target.closest('#bCal,#bDateBtn,#bClock,#bTimeBtn')){e.preventDefault();$('#bGo').click()}});
+  $('#skyForm').addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.target.closest('#bCal,#bDateBtn,#bClock,#bTimeBtn,#bCityPop,#bCityBtn')){e.preventDefault();$('#bGo').click()}});
   cv.addEventListener('pointerdown',onDown);cv.addEventListener('pointermove',onMove);cv.addEventListener('pointerup',onUp);cv.addEventListener('pointercancel',()=>{V.drag=null;V.dirty=true});
   cv.addEventListener('pointerleave',()=>{V.hover=null;tip.style.opacity=0;zodHover(null);V.dirty=true});
   cv.addEventListener('wheel',onWheel,{passive:false});
@@ -980,7 +992,7 @@ function calRender(focusSel){
   if(focusSel){const b=body.querySelector('[aria-selected=true]:not(:disabled)')||body.querySelector('.now:not(:disabled)')||body.querySelector('button:not(:disabled)');b&&b.focus({preventScroll:true})}
 }
 function calOpen(){
-  if(CAL.open)return;if(CLK.open)clkClose();CAL.open=true;const S=calSel(),T=calToday();
+  if(CAL.open)return;if(CLK.open)clkClose();if(CITY.open)cityClose();CAL.open=true;const S=calSel(),T=calToday();
   if(S){CAL.view='d';CAL.y=S.y;CAL.m=S.m}else{CAL.view='y';CAL.y=T.y-25;CAL.m=0}
   CAL.y0=Math.max(Y_MIN,CAL.y-10);
   const f=$('#bDateBtn'),cal=$('#bCal'),fr=f.getBoundingClientRect(),pr=$('#skyForm').getBoundingClientRect();
@@ -1032,7 +1044,7 @@ function calInit(){
     if(t.getUTCFullYear()<Y_MIN||t>Date.UTC(T.y,T.m,T.d))return;
     CAL.y=t.getUTCFullYear();CAL.m=t.getUTCMonth();calRender();cal.querySelector(`.cal-body [data-d="${t.getUTCDate()}"]`)?.focus();
   });
-  document.addEventListener('pointerdown',e=>{if(CAL.open&&!e.target.closest('#bCal,#bDateBtn'))calClose();if(CLK.open&&!e.target.closest('#bClock,#bTimeBtn'))clkClose()},true);
+  document.addEventListener('pointerdown',e=>{if(CAL.open&&!e.target.closest('#bCal,#bDateBtn'))calClose();if(CLK.open&&!e.target.closest('#bClock,#bTimeBtn'))clkClose();if(CITY.open&&!e.target.closest('#bCityPop,#bCityBtn'))cityClose()},true);
 }
 /* ---- birth-time picker: hour and minute wheels (24 h, Thai time-of-day word), the field keeps hh:mm ---- */
 const CLK={open:false};
@@ -1055,7 +1067,7 @@ function clkScroll(smooth){
     if(b)col.scrollTo({top:b.offsetTop-90,behavior:smooth?'smooth':'auto'})});
 }
 function clkOpen(){
-  if(CLK.open||$('#bTimeBtn').disabled)return;if(CAL.open)calClose();CLK.open=true;
+  if(CLK.open||$('#bTimeBtn').disabled)return;if(CAL.open)calClose();if(CITY.open)cityClose();CLK.open=true;
   const c=$('#bClock');c.hidden=false;$('#bTimeBtn').setAttribute('aria-expanded','true');clkShow();clkScroll(false);calPlace(c,$('#bTimeBtn'));
   const b=c.querySelector('.clk-col[data-k=h] [aria-selected=true]')||c.querySelector('.clk-col[data-k=h] [data-v="21"]');b&&b.focus({preventScroll:true});
   gsap.fromTo(c,{autoAlpha:0,y:-8,scale:.97,transformOrigin:'50% 0'},{autoAlpha:1,y:0,scale:1,duration:RM()?.01:.28,ease:EO});
@@ -1090,6 +1102,37 @@ function clkInit(){
     if(e.key==='ArrowUp'||e.key==='ArrowDown'){e.preventDefault();const j=(i+(e.key==='ArrowDown'?1:-1)+n)%n;const t=col.children[j];
       col.dataset.k==='h'?clkSet(j,null):clkSet(null,j);t.focus({preventScroll:true});clkScroll(true)}
     else if(e.key==='ArrowLeft'||e.key==='ArrowRight'){e.preventDefault();const o=c.querySelector(`.clk-col[data-k=${e.key==='ArrowRight'?'m':'h'}]`);(o.querySelector('[aria-selected=true]')||o.firstChild).focus({preventScroll:true})}
+  });
+}
+/* ---- birth-city picker: the cities in a scrolling gold list (the hidden #bCity keeps the index) ---- */
+const CITY={open:false};
+function cityShow(){
+  const i=+$('#bCity').value||0;$('#bCityBtn .v').textContent=CITIES[i][0];$('#bCityBtn').setAttribute('aria-label',`เมืองที่เกิด ${CITIES[i][0]} (กดเพื่อเปลี่ยน)`);
+  $('#bCityPop').querySelectorAll('.city-list button').forEach(b=>b.setAttribute('aria-selected',+b.dataset.i===i));
+}
+function cityOpen(){
+  if(CITY.open)return;if(CAL.open)calClose();if(CLK.open)clkClose();CITY.open=true;
+  const c=$('#bCityPop'),l=c.querySelector('.city-list');c.hidden=false;$('#bCityBtn').setAttribute('aria-expanded','true');cityShow();calPlace(c,$('#bCityBtn'));
+  const b=l.querySelector('[aria-selected=true]');if(b){l.scrollTop=b.offsetTop-l.clientHeight/2;b.focus({preventScroll:true})}
+  gsap.fromTo(c,{autoAlpha:0,y:-8,scale:.97,transformOrigin:'50% 100%'},{autoAlpha:1,y:0,scale:1,duration:RM()?.01:.28,ease:EO});
+}
+function cityClose(back){
+  if(!CITY.open)return;CITY.open=false;const c=$('#bCityPop');$('#bCityBtn').setAttribute('aria-expanded','false');
+  gsap.to(c,{autoAlpha:0,y:-6,duration:RM()?.01:.18,ease:'power2.in',onComplete:()=>{c.hidden=true}});
+  if(back)$('#bCityBtn').focus({preventScroll:true});
+}
+function cityInit(){
+  const c=$('#bCityPop'),l=c.querySelector('.city-list');cityShow();
+  $('#bCityBtn').addEventListener('click',()=>CITY.open?cityClose():cityOpen());
+  c.querySelector('.cal-close').addEventListener('click',()=>cityClose(true));
+  l.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;$('#bCity').value=b.dataset.i;cityShow();setTimeout(()=>cityClose(true),140)});
+  l.addEventListener('wheel',e=>e.stopPropagation(),{passive:true});
+  c.addEventListener('keydown',e=>{
+    if(e.key==='Escape'){e.preventDefault();e.stopPropagation();cityClose(true);return}
+    const all=[...l.children],i=all.indexOf(document.activeElement);if(i<0)return;
+    const cols=getComputedStyle(l).gridTemplateColumns.split(' ').length,mv={ArrowLeft:-1,ArrowRight:1,ArrowUp:-cols,ArrowDown:cols}[e.key];
+    if(e.key==='Enter'){e.preventDefault();all[i].click();return}
+    if(mv==null)return;e.preventDefault();const t=all[i+mv];t&&t.focus();
   });
 }
 function birthFrom(){
