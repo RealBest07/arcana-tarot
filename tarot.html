@@ -1515,15 +1515,49 @@ function cornerPose(k){
 }
 function offPose(c){const L=S.L,R=Math.hypot(L.W,L.H)*.7;return pose({x:Math.cos(c.a0)*R,y:Math.sin(c.a0)*R,z:c.zf,rotation:c.a0/D2R+90,rotationX:c.rx0,rotationY:c.ry0})}
 function maxPan(n){const L=S.L;return Math.max(0,((n-1)*L.step)/2-(L.W/2-L.cw/2-14))}
+/* Pick layouts: each deal picks one at random (never the same twice in a row).
+   wide screens: arc · wave · twin (two tiers) · scatter (cards strewn on the table)
+   phones (a pannable row): arc · wave · scatter
+   twin and scatter keep per-card data set at deal time (c.tier, c.fs), so when a card is taken
+   the others stay where they lie instead of every later card shifting along. */
+const FAN_WIDE=['arc','wave','twin','scatter'],FAN_ROW=['arc','wave','scatter'];
+function pickFanKind(){
+  const list=S.L.row?FAN_ROW:FAN_WIDE,opts=list.filter(k=>k!==S.fanKind);
+  S.fanKind=opts[Math.floor(Math.random()*opts.length)];
+  const n=S.fan.length,cols=Math.ceil(n/3),R=Math.random;
+  S.fan.forEach((c,i)=>{
+    c.tier=i%2;
+    const col=Math.floor(i/3),row=i%3;
+    c.fs={u:(col+.5+(R()-.5)*.9)/cols,v:(row+.15+R()*.7)/3,r:(R()*2-1)*26,j:R()*2-1};
+  });
+}
+function arcAt(t,Rx,Ry,top){return{x:Rx*Math.sin(t),y:top+Ry*(1-Math.cos(t)),rotation:Math.atan2(Ry*Math.sin(t),Rx*Math.cos(t))/D2R}}
 function fanPose(i,n){
-  const L=S.L,ch=L.ch;
+  const L=S.L,ch=L.ch,kind=S.fanKind||'arc',c=S.fan[i];
   if(L.row){
-    const half=L.W/2,x=(i-(n-1)/2)*L.step-S.pan,u=x/half,k=26,topY=L.H-L.Hf+50+ch/2;
-    return pose({x,y:topY+k*u*u-L.H/2,z:i*1.2,rotation:Math.atan(2*k*u/half)/D2R});
+    const half=L.W/2,x=(i-(n-1)/2)*L.step-S.pan,u=x/half,topY=L.H-L.Hf+50+ch/2-L.H/2;
+    if(kind==='wave'){const a=14,w=.42;return pose({x,y:topY+a+a*Math.sin(i*w),z:i*1.2,rotation:Math.atan(a*w*Math.cos(i*w)/L.step)/D2R*.5})}
+    if(kind==='scatter'&&c&&c.fs){const j=c.fs.j;return pose({x,y:topY+10+j*12,z:i*1.2,rotation:j*9})}
+    const k=26;return pose({x,y:topY+k*u*u,z:i*1.2,rotation:Math.atan(2*k*u/half)/D2R});
   }
-  const A=70,Hf=L.Hf,Ry=Math.max(50,(Hf-34-1.1*ch)/(1-Math.cos(A*D2R))),Rx=Math.max(160,Math.min(L.W*.5-ch*.55-10,720));
-  const t=(i-(n-1)/2)*(2*A/77)*D2R,pivot=30+ch/2+Ry;
-  return pose({x:Rx*Math.sin(t),y:(L.H-Hf+pivot-Ry*Math.cos(t))-L.H/2,z:i*1.2,rotation:Math.atan2(Ry*Math.sin(t),Rx*Math.cos(t))/D2R,rotationX:6});
+  const Hf=L.Hf,Rx=Math.max(160,Math.min(L.W*.5-ch*.55-10,720)),top=L.H-Hf+30+ch/2-L.H/2;
+  if(kind==='wave'){
+    const s=n>1?i/(n-1):.5,a=clamp((Hf-30-ch)/2.2,12,46),ph=s*Math.PI*4;
+    return pose({x:Rx*(2*s-1),y:top+a+a*Math.sin(ph),z:i*1.2,rotation:Math.atan(a*4*Math.PI*Math.cos(ph)/(2*Rx))/D2R,rotationX:6});
+  }
+  if(kind==='twin'&&c&&c.tier!==undefined){
+    let r=0,m=0;S.fan.forEach((d,k)=>{if(d.tier===c.tier){if(k<i)r++;m++}});
+    const back=c.tier===0,A=back?52:62,span=Math.max(1,m-1),t=(r-span/2)*(2*A/Math.max(span,40))*D2R;
+    const Ry=ch*(back?.62:.5);
+    const p=arcAt(t,back?Rx*.84:Rx,Ry,back?top-ch*.18:top+ch*.3);
+    return pose({...p,z:(back?0:120)+r*1.2,rotationX:6});
+  }
+  if(kind==='scatter'&&c&&c.fs){
+    const f=c.fs,y0=top,y1=L.H/2-ch*.28;
+    return pose({x:Rx*(2*f.u-1),y:y0+(y1-y0)*f.v,z:i*1.2,rotation:f.r,rotationX:6});
+  }
+  const A=70,Ry=Math.max(50,(Hf-34-1.1*ch)/(1-Math.cos(A*D2R)));
+  return pose({...arcAt((i-(n-1)/2)*(2*A/77)*D2R,Rx,Ry,top),z:i*1.2,rotationX:6});
 }
 function revealBox(){
   const L=S.L,open=S.dock==='open',peek=S.dock==='peek',extra=S.summary?52:0;
@@ -1691,8 +1725,10 @@ document.addEventListener('pointerdown',e=>{S.lastPtr=e.pointerType},true);
 const PERSP=1700;
 function hitFan(cx,cy){
   const L=S.L,n=S.fan.length,oy=L.H*(.46-.5),px=cx-L.W/2,py=cy-L.H/2;
-  for(let i=n-1;i>=0;i--){
-    const c=S.fan[i],p=fanPose(i,n),f=PERSP/(PERSP-p.z),X=p.x*f,Y=oy+(p.y-oy)*f,th=p.rotation*D2R;
+  // test the nearest card first: in the twin layout the front tier is not the higher index
+  const order=S.fan.map((c,i)=>({c,i,p:fanPose(i,n)})).sort((a,b)=>b.p.z-a.p.z||b.i-a.i);
+  for(const {c,p} of order){
+    const f=PERSP/(PERSP-p.z),X=p.x*f,Y=oy+(p.y-oy)*f,th=p.rotation*D2R;
     const dx=(px-X)/f,dy=(py-Y)/f,lx=dx*Math.cos(th)+dy*Math.sin(th),ly=-dx*Math.sin(th)+dy*Math.cos(th);
     const top=(c===S.hover||c===S.armed)?-L.ch/2-46:-L.ch/2;          // a lifted card keeps its raised top edge
     if(Math.abs(lx)<=L.cw/2&&ly>=top&&ly<=L.ch/2)return{c,u:lx/L.cw};
@@ -1966,7 +2002,7 @@ async function toShuffle(){
 
 /* ---- PHASE 5 · pick: the last shuffle flows straight into a 3D fan ---- */
 async function dealFan(){
-  setState('pick');S.fan=[...S.deck];S.picked=[];S.pan=0;S.rest=[];S.L=computeLayout();
+  setState('pick');S.fan=[...S.deck];S.picked=[];S.pan=0;S.rest=[];S.L=computeLayout();pickFanKind();
   const n=S.fan.length,els=S.fan.map(c=>c.el),tl=gsap.timeline();
   S.fan.forEach((c,i)=>{c.el.setAttribute('aria-label',`ไพ่คว่ำหน้าใบที่ ${i+1} จาก ${n} กด Enter เพื่อเลือก`)});
   setPrompt(`เลือกอีก ${SPREADS[S.spreadKey].count} ใบ`,matchMedia('(hover:none)').matches?'ลากเพื่อเลื่อนดูไพ่ แตะเพื่อยก แตะอีกครั้งเพื่อยืนยัน':'เลื่อนเมาส์บนไพ่แล้วคลิกใบที่ใช่ (หรือใช้ปุ่มลูกศร + Enter)');
