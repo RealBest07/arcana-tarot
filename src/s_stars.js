@@ -612,7 +612,7 @@ function build(){
   const noTime=()=>{const on=$('#bNoTime').checked,t=$('#bTime');if(on&&!t.disabled){typedT=t.value;t.value='21:00'}else if(!on&&t.disabled)t.value=typedT;t.disabled=on;
     $('#bTimeBtn').disabled=on;if(on)clkClose();clkShow()};
   $('#bNoTime').addEventListener('change',noTime);noTime();
-  $('#wish').addEventListener('click',wishClose);$('#wish').addEventListener('keydown',e=>{if(e.key==='Escape'||e.key==='Enter'){e.preventDefault();wishClose()}});
+  $('#wish').addEventListener('click',()=>wishClose());$('#wish').addEventListener('keydown',e=>{if(e.key==='Escape'||e.key==='Enter'){e.preventDefault();wishClose()}});
   $('#bGo').addEventListener('click',()=>{if(S.state==='stars'&&!S.busy&&V.mode==='form')go(openSky)});
   $('#skyForm').addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.target.closest('#bCal,#bDateBtn,#bClock,#bTimeBtn,#bCityPop,#bCityBtn')){e.preventDefault();$('#bGo').click()}});
   cv.addEventListener('pointerdown',onDown);cv.addEventListener('pointermove',onMove);cv.addEventListener('pointerup',onUp);cv.addEventListener('pointercancel',()=>{V.drag=null;V.dirty=true});
@@ -859,7 +859,7 @@ function render(){
 }
 
 /* ---- falling stars: now and then one crosses the sky; catch it and it turns into a wish card ---- */
-const MET={list:[],next:0,hinted:false,open:false};
+const MET={list:[],next:0,hinted:false,open:false,ready:false,tl:null};
 const WISHES=[
   ['ความรักที่รอคอย','ใครบางคนกำลังเดินมาหาคุณ ช้าแต่แน่นอน เปิดใจไว้ให้กว้าง'],
   ['โชคลาภไหลมา','เงินที่ติดค้างจะกลับมา และโอกาสใหม่จะเข้ามาทางคนที่คุณไม่คาดคิด'],
@@ -911,18 +911,21 @@ function catchMeteor(p,touch){
   return false;
 }
 function wishOpen(x,y){
-  MET.open=true;MET.hinted=true;tip.style.opacity=0;Sound.chime&&Sound.chime();buzz([12,40,18]);
+  MET.open=true;MET.ready=false;MET.hinted=true;tip.style.opacity=0;Sound.chime&&Sound.chime();buzz([12,40,18]);
   const [h,msg]=WISHES[Math.floor(Math.random()*WISHES.length)],w=$('#wish'),inn=w.querySelector('.in');
   w.querySelector('h4').textContent=h;w.querySelector('p').textContent=msg;
   const r=w.getBoundingClientRect();gsap.set(w,{xPercent:-50,yPercent:-50});gsap.set(inn,{rotationY:0});
   const dx=x-innerWidth/2,dy=y-innerHeight/2;
-  if(RM()){gsap.set(inn,{rotationY:180});gsap.fromTo(w,{autoAlpha:0},{autoAlpha:1,duration:.3});w.focus({preventScroll:true});return}
-  gsap.timeline({onComplete:()=>w.focus({preventScroll:true})})
+  gsap.killTweensOf([w,inn]);MET.tl&&MET.tl.kill();
+  /* the finger that caught the star is still down: its click must not land on the card, so taps count only once it has turned */
+  const done=()=>{MET.ready=true;w.focus({preventScroll:true})};
+  if(RM()){gsap.set(inn,{rotationY:180});MET.tl=gsap.fromTo(w,{autoAlpha:0,x:0,y:0,scale:1,rotation:0},{autoAlpha:1,duration:.3,onComplete:done});return}
+  MET.tl=gsap.timeline({onComplete:done})
     .fromTo(w,{autoAlpha:0,x:dx,y:dy,scale:.12,rotation:dx>0?30:-30},{autoAlpha:1,x:0,y:0,scale:1,rotation:0,duration:1.1,ease:'expo.out'})
     .to(inn,{rotationY:180,duration:.9,ease:'power3.inOut'},.75);
 }
-function wishClose(){
-  if(!MET.open)return;const w=$('#wish');
+function wishClose(force){
+  if(!MET.open||!(MET.ready||force))return;MET.ready=false;const w=$('#wish');MET.tl&&MET.tl.kill();
   gsap.to(w,{autoAlpha:0,y:-30,scale:.92,duration:RM()?.01:.4,ease:'power2.in',onComplete:()=>{MET.open=false;MET.next=performance.now()/1000+6}});
 }
 
@@ -1361,7 +1364,7 @@ async function enter(){
   setTimeout(()=>{if(V.mode==='form'&&S.lastPtr==='mouse')$('#bDateBtn').focus({preventScroll:true})},400);
 }
 async function leave(){
-  wishClose();MET.list.length=0;
+  wishClose(true);MET.list.length=0;
   setState('gather');V.mode='anim';cv.classList.remove('draw');tip.style.opacity=0;
   const tl=gsap.timeline();
   if(V.gyro)gyroOff();astroOut();
