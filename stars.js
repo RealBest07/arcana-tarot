@@ -522,6 +522,20 @@ const css=`#sky{position:fixed;inset:0;width:100%;height:100%;z-index:3;opacity:
 #skyInfo .medal i{flex:none;position:relative;width:58px;height:58px;background:url(assets/medallion.webp) center/contain no-repeat;filter:drop-shadow(0 3px 6px rgba(0,0,0,.6))}
 #skyInfo .medal i::after{content:"";position:absolute;left:50%;top:50%;width:8px;height:8px;margin:-4px 0 0 -4px;border-radius:50%;background:#fff6dc;box-shadow:0 0 6px 3px rgba(255,226,170,.85),0 0 16px 6px rgba(242,212,138,.35)}
 #skyName{width:100%;font-size:15px;padding:9px 12px}
+#wish{position:fixed;left:50%;top:50%;z-index:12;width:min(230px,62vw);aspect-ratio:5/8;margin:0;perspective:1200px;opacity:0;visibility:hidden;cursor:pointer}
+#wish .in{position:absolute;inset:0;transform-style:preserve-3d}
+#wish .f{position:absolute;inset:0;backface-visibility:hidden;-webkit-backface-visibility:hidden;border-radius:14px;border:1px solid rgba(236,214,162,.7);overflow:hidden;
+  box-shadow:0 30px 70px rgba(0,0,0,.7),0 0 40px rgba(242,212,138,.25);background:radial-gradient(90% 60% at 50% 30%,rgba(70,82,140,.6),transparent 70%),linear-gradient(180deg,#121423,#08080d)}
+#wish .f::before{content:"";position:absolute;inset:7px;border:1px solid rgba(220,194,140,.35);border-radius:9px}
+#wish .back{display:grid;place-items:center}
+#wish .back i{width:62%;aspect-ratio:1;background:url(assets/medallion.webp) center/contain no-repeat;filter:drop-shadow(0 0 16px rgba(242,212,138,.45))}
+#wish .front{transform:rotateY(180deg);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:26px 20px;text-align:center}
+#wish .front .k{font-family:'Cinzel',serif;font-size:11px;letter-spacing:.38em;color:var(--gold)}
+#wish .front .st{width:46px;height:46px;position:relative}
+#wish .front .st::before{content:"✦";position:absolute;inset:0;display:grid;place-content:center;font-size:40px;color:#fff3d6;text-shadow:0 0 14px rgba(255,226,170,.95),0 0 34px rgba(242,212,138,.6)}
+#wish .front h4{margin:0;font-size:18px;font-weight:600;color:var(--gold2)}
+#wish .front p{margin:0;font-size:14.5px;line-height:1.7;color:var(--ink)}
+#wish .front small{margin-top:4px;font-size:12px;color:var(--muted)}
 #skyTip{position:fixed;z-index:7;pointer-events:none;padding:5px 10px;border-radius:6px;background:rgba(14,13,17,.92);border:1px solid var(--line);color:var(--gold2);font-size:13px;white-space:nowrap;opacity:0;translate:-50% calc(-100% - 12px)}
 #skyTip small{color:var(--muted);margin-left:6px}
 #sky.pan{cursor:grabbing}
@@ -580,6 +594,8 @@ function build(){
 </section>
 <aside id="skyInfo" class="glass" aria-label="ดาวเกิดของคุณ" aria-live="polite"></aside>
 <div id="skyTip" aria-hidden="true"></div>
+<figure id="wish" role="dialog" aria-label="คำอธิษฐานจากดาวตก" tabindex="-1"><div class="in"><div class="f back"><i></i></div>
+  <div class="f front"><span class="k">FALLING STAR</span><span class="st"></span><h4></h4><p></p><small>แตะเพื่อปิด</small></div></div></figure>
 <div id="skyBar" class="glass" role="toolbar" aria-label="มองท้องฟ้ารอบตัว">
   <p id="skyBarMsg" aria-live="polite"></p>
   <div class="row">
@@ -596,6 +612,7 @@ function build(){
   const noTime=()=>{const on=$('#bNoTime').checked,t=$('#bTime');if(on&&!t.disabled){typedT=t.value;t.value='21:00'}else if(!on&&t.disabled)t.value=typedT;t.disabled=on;
     $('#bTimeBtn').disabled=on;if(on)clkClose();clkShow()};
   $('#bNoTime').addEventListener('change',noTime);noTime();
+  $('#wish').addEventListener('click',wishClose);$('#wish').addEventListener('keydown',e=>{if(e.key==='Escape'||e.key==='Enter'){e.preventDefault();wishClose()}});
   $('#bGo').addEventListener('click',()=>{if(S.state==='stars'&&!S.busy&&V.mode==='form')go(openSky)});
   $('#skyForm').addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.target.closest('#bCal,#bDateBtn,#bClock,#bTimeBtn,#bCityPop,#bCityBtn')){e.preventDefault();$('#bGo').click()}});
   cv.addEventListener('pointerdown',onDown);cv.addEventListener('pointermove',onMove);cv.addEventListener('pointerup',onUp);cv.addEventListener('pointercancel',()=>{V.drag=null;V.dirty=true});
@@ -838,6 +855,75 @@ function render(){
   if(V.sel!=null){const v=V.vis[V.sel];cx.strokeStyle=`rgba(242,212,138,${.55+.35*Math.sin(t*4)})`;cx.lineWidth=1.5;cx.beginPath();cx.arc(v.x,v.y,starR(Math.min(v.s.m,3),k)+8,0,TAU);cx.stroke()}
   if(V.hover!=null&&V.hover!==V.sel){const v=V.vis[V.hover];cx.strokeStyle='rgba(242,212,138,.5)';cx.lineWidth=1;cx.beginPath();cx.arc(v.x,v.y,starR(Math.min(v.s.m,3),k)+6,0,TAU);cx.stroke()}
   cx.globalAlpha=1;
+  meteors(t,W,H,dome);
+}
+
+/* ---- falling stars: now and then one crosses the sky; catch it and it turns into a wish card ---- */
+const MET={list:[],next:0,hinted:false,open:false};
+const WISHES=[
+  ['ความรักที่รอคอย','ใครบางคนกำลังเดินมาหาคุณ ช้าแต่แน่นอน เปิดใจไว้ให้กว้าง'],
+  ['โชคลาภไหลมา','เงินที่ติดค้างจะกลับมา และโอกาสใหม่จะเข้ามาทางคนที่คุณไม่คาดคิด'],
+  ['เริ่มใหม่ได้เสมอ','สิ่งที่จบลงไม่ใช่ความล้มเหลว มันคือที่ว่างสำหรับสิ่งที่ดีกว่า'],
+  ['หัวใจที่สงบ','ปล่อยวางเรื่องที่ควบคุมไม่ได้ แล้วคืนนี้คุณจะหลับสบาย'],
+  ['ความฝันใกล้เป็นจริง','อีกไม่กี่ก้าวเท่านั้น อย่าเพิ่งหยุดเดิน'],
+  ['มิตรแท้','คนที่อยู่ข้างคุณตอนนี้ คือของขวัญที่ดวงดาวส่งมา'],
+  ['สุขภาพแข็งแรง','ร่างกายกำลังฟื้นตัว ดูแลตัวเองอีกนิด แล้วพลังจะกลับมาเต็ม'],
+  ['การงานรุ่งเรือง','ความพยายามที่ไม่มีใครเห็น กำลังจะมีคนเห็นแล้ว'],
+  ['คำตอบที่ตามหา','คำตอบอยู่ในเสียงแรกที่ใจคุณบอก เชื่อมันเถอะ'],
+  ['การเดินทาง','ทางไกลข้างหน้าจะพาคุณไปพบสิ่งที่เปลี่ยนชีวิต'],
+  ['ปล่อยวางอดีต','บาดแผลเก่ากำลังสมาน วันนี้คุณเบาขึ้นกว่าเมื่อวาน'],
+  ['ความกล้า','สิ่งที่คุณกลัวที่สุด คือประตูที่คุณควรเปิด'],
+  ['บ้านที่อบอุ่น','ครอบครัวจะได้กลับมาพร้อมหน้า และหัวเราะด้วยกันอีกครั้ง'],
+  ['ปาฏิหาริย์เล็ก ๆ','คอยสังเกตเรื่องบังเอิญในสัปดาห์นี้ ดวงดาวกำลังส่งสัญญาณ'],
+  ['ตัวตนที่แท้จริง','คุณไม่จำเป็นต้องเป็นใครอื่น แสงของคุณสว่างพอแล้ว'],
+  ['คำอธิษฐานถูกได้ยิน','สิ่งที่คุณขอไว้ในใจ ดวงดาวรับรู้แล้ว รออีกสักนิด'],
+];
+function meteors(t,W,H,dome){
+  if(V.mode!=='sky'||V.anim){MET.list.length=0;return}
+  if(!MET.next)MET.next=t+4+Math.random()*3;
+  if(t>MET.next&&!MET.open&&MET.list.length<1){
+    MET.next=t+7+Math.random()*8;
+    // start in the upper part of the sky (inside the chart's circle when it is a chart), fall down and sideways
+    const ang=(Math.random()<.5?1:-1)*(.35+Math.random()*.5),len=Math.min(W,H)*(.35+Math.random()*.15),sp=len/1.9;
+    let x,y;
+    if(dome){x=W*(.2+Math.random()*.6);y=H*(.1+Math.random()*.25)}
+    else{const a=-Math.PI/2+(Math.random()-.5)*1.6,r=V.R*V.scale*(.35+Math.random()*.4);x=V.cx+Math.cos(a)*r;y=V.cy+Math.sin(a)*r}
+    MET.list.push({x,y,dx:Math.sin(ang),dy:Math.cos(ang),sp,t0:t,life:1.9,len:Math.min(W,H)*.14});
+  }
+  for(let i=MET.list.length-1;i>=0;i--){
+    const m=MET.list[i],u=(t-m.t0)/m.life;if(u>=1){MET.list.splice(i,1);if(!MET.hinted)tip.style.opacity=0;continue}
+    const d=m.sp*(t-m.t0),hx=m.x+m.dx*d,hy=m.y+m.dy*d,a=u<.15?u/.15:u>.75?(1-u)/.25:1;m.hx=hx;m.hy=hy;
+    const tx=hx-m.dx*m.len,ty=hy-m.dy*m.len,g=cx.createLinearGradient(tx,ty,hx,hy);
+    g.addColorStop(0,'rgba(255,236,200,0)');g.addColorStop(1,`rgba(255,240,214,${.85*a})`);
+    cx.strokeStyle=g;cx.lineWidth=2.2;cx.lineCap='round';cx.beginPath();cx.moveTo(tx,ty);cx.lineTo(hx,hy);cx.stroke();
+    const r=10+3*Math.sin(t*12),h=cx.createRadialGradient(hx,hy,0,hx,hy,r*2.2);
+    h.addColorStop(0,`rgba(255,250,235,${a})`);h.addColorStop(.25,`rgba(255,226,170,${.7*a})`);h.addColorStop(1,'rgba(255,226,170,0)');
+    cx.fillStyle=h;cx.beginPath();cx.arc(hx,hy,r*2.2,0,TAU);cx.fill();
+    if(!MET.hinted&&u>.1&&u<.85){tip.innerHTML='แตะดาวตก เพื่อขอพร';tip.style.opacity=1;tip.style.left=hx+'px';tip.style.top=(hy-18)+'px'}
+    else if(!MET.hinted&&u>=.85)tip.style.opacity=0;
+  }
+}
+/* a press near a falling star's head (or just behind it) catches it */
+function catchMeteor(p,touch){
+  const R=touch?52:38;
+  for(const m of MET.list){if(m.hx==null)continue;
+    for(let k=0;k<=3;k++){const x=m.hx-m.dx*m.len*k/6,y=m.hy-m.dy*m.len*k/6;if(Math.hypot(p.x-x,p.y-y)<R){MET.list.splice(MET.list.indexOf(m),1);wishOpen(m.hx,m.hy);return true}}}
+  return false;
+}
+function wishOpen(x,y){
+  MET.open=true;MET.hinted=true;tip.style.opacity=0;Sound.chime&&Sound.chime();buzz([12,40,18]);
+  const [h,msg]=WISHES[Math.floor(Math.random()*WISHES.length)],w=$('#wish'),inn=w.querySelector('.in');
+  w.querySelector('h4').textContent=h;w.querySelector('p').textContent=msg;
+  const r=w.getBoundingClientRect();gsap.set(w,{xPercent:-50,yPercent:-50});gsap.set(inn,{rotationY:0});
+  const dx=x-innerWidth/2,dy=y-innerHeight/2;
+  if(RM()){gsap.set(inn,{rotationY:180});gsap.fromTo(w,{autoAlpha:0},{autoAlpha:1,duration:.3});w.focus({preventScroll:true});return}
+  gsap.timeline({onComplete:()=>w.focus({preventScroll:true})})
+    .fromTo(w,{autoAlpha:0,x:dx,y:dy,scale:.12,rotation:dx>0?30:-30},{autoAlpha:1,x:0,y:0,scale:1,rotation:0,duration:1.1,ease:'expo.out'})
+    .to(inn,{rotationY:180,duration:.9,ease:'power3.inOut'},.75);
+}
+function wishClose(){
+  if(!MET.open)return;const w=$('#wish');
+  gsap.to(w,{autoAlpha:0,y:-30,scale:.92,duration:RM()?.01:.4,ease:'power2.in',onComplete:()=>{MET.open=false;MET.next=performance.now()/1000+6}});
 }
 
 /* ---- drawing your own constellation ---- */
@@ -851,7 +937,10 @@ function nearest(x,y,max=22){
 const pt=e=>({x:e.clientX,y:e.clientY});
 const PTS=new Map();
 function onDown(e){
-  if(V.mode!=='sky'||e.button>0)return;const p=pt(e);PTS.set(e.pointerId,p);cv.setPointerCapture(e.pointerId);
+  if(V.mode!=='sky'||e.button>0)return;const p=pt(e);
+  if(MET.open){wishClose();return}
+  if(catchMeteor(p,e.pointerType!=='mouse'))return;
+  PTS.set(e.pointerId,p);cv.setPointerCapture(e.pointerId);
   if(V.view==='dome'&&PTS.size===2){const [a,b]=[...PTS.values()];V.drag=null;V.pan=null;V.pinch={d:Math.hypot(a.x-b.x,a.y-b.y),fov:V.cam.fov};return}
   const i=nearest(p.x,p.y,e.pointerType==='mouse'?18:28);
   if(e.pointerType!=='mouse')zodHover(zodAt(p.x,p.y,i));          // touch: a tap shows the figure under the finger
@@ -1272,6 +1361,7 @@ async function enter(){
   setTimeout(()=>{if(V.mode==='form'&&S.lastPtr==='mouse')$('#bDateBtn').focus({preventScroll:true})},400);
 }
 async function leave(){
+  wishClose();MET.list.length=0;
   setState('gather');V.mode='anim';cv.classList.remove('draw');tip.style.opacity=0;
   const tl=gsap.timeline();
   if(V.gyro)gyroOff();astroOut();
@@ -1281,5 +1371,5 @@ async function leave(){
   await tlDone(tl);V.mode='off';V.view='chart';stopTick();
 }
 function resize(){if(!built||V.mode==='off')return;layout()}
-return{enter,leave,resize,V,_render:render,_zod:ZOD};   // _render: lets a test drive frames by hand
+return{enter,leave,resize,V,_render:render,_zod:ZOD,_met:MET};   // _render: lets a test drive frames by hand
 })();
